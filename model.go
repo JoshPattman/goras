@@ -36,7 +36,7 @@ func (m *Model) AddLayer(l Layer) {
 // Build builds the model, using a specified input and output node.
 // It adds the loss function to the graph, and creates the machine.
 // This should only be called once per model.
-func (m *Model) Build(inputNode, outputNode *G.Node, loss func(*G.Node, *G.Node) *G.Node) {
+func (m *Model) Build(inputNode, outputNode *G.Node, loss func(*G.Node, *G.Node) (*G.Node, error)) error {
 	// Store input and output nodes
 	m.InputNode = inputNode
 	m.OutputNode = outputNode
@@ -44,12 +44,26 @@ func (m *Model) Build(inputNode, outputNode *G.Node, loss func(*G.Node, *G.Node)
 	G.Read(m.OutputNode, &m.OutputValue)
 	// Define loss function
 	m.TargetOutputNode = G.NewMatrix(m.Graph, G.Float64, G.WithShape(m.OutputNode.Shape()...))
-	lossNode := loss(m.OutputNode, m.TargetOutputNode)
+	lossNode, err := loss(m.OutputNode, m.TargetOutputNode)
+	if err != nil {
+		return err
+	}
 	G.Read(lossNode, &m.LossValue)
-	G.Grad(lossNode, m.Trainables()...)
+	_, err = G.Grad(lossNode, m.Trainables()...)
+	if err != nil {
+		return err
+	}
 
 	// Create machine
 	m.Machine = G.NewTapeMachine(m.Graph)
+	return nil
+}
+
+func (m *Model) MustBuild(inputNode, outputNode *G.Node, loss func(*G.Node, *G.Node) (*G.Node, error)) {
+	err := m.Build(inputNode, outputNode, loss)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Trainables returns a list of all the trainable nodes in the model.

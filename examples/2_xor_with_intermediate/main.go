@@ -146,7 +146,7 @@ func MakeModel(isJustForEncoding bool) *K.Model {
 
 	// Build the rest of the model so we can train it and run it
 	// We are providing it with a mean squared error loss
-	model.Build(inputs, outputs, K.MSE)
+	model.MustBuild(inputs, outputs, K.MSE)
 
 	return model
 }
