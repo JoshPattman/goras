@@ -2,7 +2,6 @@ package goras
 
 import (
 	G "gorgonia.org/gorgonia"
-	T "gorgonia.org/tensor"
 )
 
 // ActivationLayer is a layer that applies an activation function to its input.
@@ -30,7 +29,7 @@ func (a *ActivationLayer) Attach(n *G.Node) *G.Node {
 	case "tanh":
 		return G.Must(G.Tanh(n))
 	case "binary":
-		return G.Must(G.Gt(n, G.NewScalar(a.Graph, T.Float64, G.WithInit(G.Zeroes())), true))
+		return G.Must(G.Gt(n, G.NewConstant(0.0), true))
 	default:
 		panic("Invalid activation")
 	}
