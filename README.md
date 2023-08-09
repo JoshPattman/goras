@@ -33,39 +33,34 @@ n := K.NewNamer("model")
 inputs := K.Input(model, n.Next(), batchSize, inputNodes).Node
 // Create the first Dense layer and its activation.
 // Note that dense layers do not have an activation themselves, so you have to add one manually after
-outputs := K.Dense(model, n.Next(), hiddenNodes).Attach(inputs)
-outputs = K.Activation(model, n.Next(), "sigmoid").Attach(outputs)
+outputs := K.Dense(model, n.Next(), hiddenNodes).MustAttach(inputs)
+outputs = K.Activation(model, n.Next(), "sigmoid").MustAttach(outputs)
 // Create the second Dense layer
-outputs = K.Dense(model, n.Next(), outputNodes).Attach(outputs)
-outputs = K.Activation(model, n.Next(), "sigmoid").Attach(outputs)
+outputs = K.Dense(model, n.Next(), outputNodes).MustAttach(outputs)
+outputs = K.Activation(model, n.Next(), "sigmoid").MustAttach(outputs)
 
 // Build the rest of the model so we can train it and run it
 // We are providing it with a mean squared error loss
-model.Build(inputs, outputs, K.MSE)
+model.MustBuild(inputs, outputs, K.MSE)
 ```
 
 ### Fitting the model
 ```go
 // Create an ADAM solver - this is the thing that actually updates the weights
 solver := G.NewAdamSolver(G.WithLearnRate(0.01))
-
-// Train the model for 1000 epochs
-for epoch := 0; epoch <= 1000; epoch++ {
-    loss := model.FitBatch(x, y, solver)
-    if epoch%100 == 0 {
-        fmt.Printf("Epoch: %-4v Loss %.4f\n", fmt.Sprint(epoch), loss)
-    }
-}
+// Fit the model for 1k epochs
+model.Fit(x, y, solver, K.WithEpochs(1000), K.WithLoggingEvery(100))
 ```
 
 ### Testing the model
 ```go
-yp := model.PredictBatch(x)
+yp, _ := model.PredictBatch(x)
+fmt.Printf("\nPredictions (%s):\n", testName)
 for i := 0; i < x.Shape()[0]; i++ {
-    sx, _ := x.Slice(T.S(i))
-    sy, _ := y.Slice(T.S(i))
-    syp, _ := yp.Slice(T.S(i))
-    fmt.Printf("X=%v Y=%v YP=%.3f\n", sx, sy, syp)
+  sx, _ := x.Slice(T.S(i))
+  sy, _ := y.Slice(T.S(i))
+  syp, _ := yp.Slice(T.S(i))
+  fmt.Printf("X=%v Y=%v YP=%.3f\n", sx, sy, syp)
 }
 ```
 
@@ -83,9 +78,5 @@ for i := 0; i < x.Shape()[0]; i++ {
 - Add these activations
   - `leaky_relu`
 - Add `L1` and `L2` regularlization
-- Add a `Fit` method to `Model` that splits the input into batch sized chunks, and shows a little loading bar
-  - A `FitBatch` method already exists, but this requires the user to write the epochs loop and split the data into batches
 - Add a `Predict` method to `Model` that splits the input into batches
 - Check if GPU support is working for cuda. I think it should work, but I havn't got round to testing yet.
-- Better error handling
-- Better error checking

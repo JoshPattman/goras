@@ -149,13 +149,12 @@ func MakeModel() *K.Model {
 
 // Function to run a model and print some values to the terminal
 func TestModel(model *K.Model, x, y *T.Dense, testName string) {
-	// Test the model without any training
-	ypNoTraining, _ := model.PredictBatch(x)
+	yp, _ := model.PredictBatch(x)
 	fmt.Printf("\nPredictions (%s):\n", testName)
 	for i := 0; i < x.Shape()[0]; i++ {
 		sx, _ := x.Slice(T.S(i))
 		sy, _ := y.Slice(T.S(i))
-		syp, _ := ypNoTraining.Slice(T.S(i))
+		syp, _ := yp.Slice(T.S(i))
 		fmt.Printf("X=%v Y=%v YP=%.3f\n", sx, sy, syp)
 	}
 	fmt.Println()
