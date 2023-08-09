@@ -1,5 +1,8 @@
 package main
 
+// In this example, we see how to create a goras model, and use it to approximate the XOR function.
+// We also save and load the model from disk.
+
 import (
 	"fmt"
 	"os"
@@ -14,11 +17,30 @@ func main() {
 	// Create the data
 	x, y := LoadXY()
 
+	/*OUTPUT
+	X:
+	⎡0  0⎤
+	⎢0  1⎥
+	⎢1  0⎥
+	⎣1  1⎦
+
+	Y:
+	C[0  1  1  0]
+	*/
+
 	// Create the model
 	model := MakeModel()
 
 	// Test the model with no training
 	TestModel(model, x, y, "no training")
+
+	/*OUTPUT
+	Predictions (no training):
+	X=[0  0] Y=0 YP=0.799
+	X=[0  1] Y=1 YP=0.799
+	X=[1  0] Y=1 YP=0.770
+	X=[1  1] Y=0 YP=0.769
+	*/
 
 	// Create an ADAM solver - this is the thing that actually updates the weights
 	solver := G.NewAdamSolver(G.WithLearnRate(0.01))
@@ -31,8 +53,30 @@ func main() {
 		}
 	}
 
+	/*OUTPUT
+	Epoch: 0    Loss 0.3305
+	Epoch: 100  Loss 0.2438
+	Epoch: 200  Loss 0.1999
+	Epoch: 300  Loss 0.1023
+	Epoch: 400  Loss 0.0305
+	Epoch: 500  Loss 0.0124
+	Epoch: 600  Loss 0.0068
+	Epoch: 700  Loss 0.0043
+	Epoch: 800  Loss 0.0031
+	Epoch: 900  Loss 0.0023
+	Epoch: 1000 Loss 0.0018
+	*/
+
 	// Test the model with after training
 	TestModel(model, x, y, "after training")
+
+	/*OUTPUT
+	Predictions (after training):
+	X=[0  0] Y=0 YP=0.042
+	X=[0  1] Y=1 YP=0.961
+	X=[1  0] Y=1 YP=0.953
+	X=[1  1] Y=0 YP=0.040
+	*/
 
 	// Save the model to a file
 	file, err := os.Create("./model.gob")
@@ -55,6 +99,14 @@ func main() {
 
 	// Test our loaded model
 	TestModel(loadedModel, x, y, "after loading")
+
+	/*OUTPUT
+	Predictions (after loading):
+	X=[0  0] Y=0 YP=0.042
+	X=[0  1] Y=1 YP=0.961
+	X=[1  0] Y=1 YP=0.953
+	X=[1  1] Y=0 YP=0.040
+	*/
 }
 
 // Function to create the X and Y data as tensors

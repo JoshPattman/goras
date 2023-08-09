@@ -1,11 +1,11 @@
-module 1_xor
+module 2_xor_with_intermediate
 
 go 1.20
 
 require (
 	github.com/JoshPattman/goras v0.0.0-20230809131136-35ea9b9165d0
-	gorgonia.org/tensor v0.9.24
 	gorgonia.org/gorgonia v0.9.17
+	gorgonia.org/tensor v0.9.24
 )
 
 require (
