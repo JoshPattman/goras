@@ -1,7 +1,7 @@
-# Goras: a Keras-like package for Go
-Goras is a package that aims to perform a similar function to Keras in python. It is a somewhat high level package that contains code for making neural models easier than it would be when using the graph computation package directly. Just as Keras uses tensorflow to actually perform maths, Goras uses the excellent (Gorgonia)[https://gorgonia.org] package for it's graph computation.
+# _Goras_: a _Keras_-like package for Go
+_Goras_ is a package that aims to perform a similar function to _Keras_ in python. It is a somewhat high level package that contains code for making neural models easier than it would be when using the graph computation package directly. Just as _Keras_ uses tensorflow to actually perform maths, _Goras_ uses the excellent (_Gorgonia_)[https://_Gorgonia_.org] package for it's graph computation.
 
-I am trying to design Goras to have a similar workflow to the Keras functional API. The functional API is capable of building of very complex models with relatively simple code. I have also tried to utilise types and functions from Gorgonia wherever possible. This means that if somthing is not implemented yet, it is easy to add it yourself. That being said, if you do create any new layers, activations, or anything else, please feel free to pull request :).
+I am trying to design _Goras_ to have a similar workflow to the _Keras_ functional API. The functional API is capable of building of very complex models with relatively simple code. I have also tried to utilise types and functions from _Gorgonia_ wherever possible. This means that if somthing is not implemented yet, it is easy to add it yourself. That being said, if you do create any new layers, activations, or anything else, please feel free to pull request :).
 
 ## Examples
 See the examples directory for some examples. More coming soon!
