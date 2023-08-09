@@ -1,6 +1,9 @@
 package goras
 
-import G "gorgonia.org/gorgonia"
+import (
+	G "gorgonia.org/gorgonia"
+	T "gorgonia.org/tensor"
+)
 
 // ActivationLayer is a layer that applies an activation function to its input.
 type ActivationLayer struct {
@@ -24,6 +27,10 @@ func (a *ActivationLayer) Attach(n *G.Node) *G.Node {
 		return G.Must(G.Sigmoid(n))
 	case "relu":
 		return G.Must(G.Rectify(n))
+	case "tanh":
+		return G.Must(G.Tanh(n))
+	case "binary":
+		return G.Must(G.Gt(n, G.NewScalar(a.Graph, T.Float64, G.WithInit(G.Zeroes())), true))
 	default:
 		panic("Invalid activation")
 	}
@@ -31,3 +38,12 @@ func (a *ActivationLayer) Attach(n *G.Node) *G.Node {
 
 // Parameters returns a map of the parameters of the layer.
 func (a *ActivationLayer) Parameters() map[string]*G.Node { return make(map[string]*G.Node) }
+
+func IsValidActivation(ac string) bool {
+	switch ac {
+	case "sigmoid", "relu", "tanh", "binary":
+		return true
+	default:
+		return false
+	}
+}

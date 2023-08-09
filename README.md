@@ -84,8 +84,7 @@ for i := 0; i < x.Shape()[0]; i++ {
   - `Reshape`
 - Add these activations
   - `leaky_relu`
-  - `tanh`
-  - `binary`
+  - `softmax`
 - Add a `Fit` method to `Model` that splits the input into batch sized chunks, and shows a little loading bar
   - A `FitBatch` method already exists, but this requires the user to write the epochs loop and split the data into batches
 - Add a `Predict` method to `Model` that splits the input into batches
