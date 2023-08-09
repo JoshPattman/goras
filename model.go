@@ -2,6 +2,7 @@ package goras
 
 import (
 	"encoding/gob"
+	"fmt"
 	"io"
 
 	G "gorgonia.org/gorgonia"
@@ -145,6 +146,7 @@ func (m *Model) PredictBatch(input *T.Dense) *T.Dense {
 
 // FitBatch runs the model on a batch of input data, and then trains the model on the target data.
 // The solver used is passed in as an argument.
+// IMPORTANT NOTE: Currently, when the data is batched, the last batch of data will be discarded if the x size does not evenly divide the batch size.
 func (m *Model) FitBatch(input, target *T.Dense, solver G.Solver) float64 {
 	m.Machine.Reset()
 	G.Let(m.InputNode, input)
@@ -154,4 +156,73 @@ func (m *Model) FitBatch(input, target *T.Dense, solver G.Solver) float64 {
 	}
 	solver.Step(G.NodesToValueGrads(m.Trainables()))
 	return m.LossValue.Data().(float64)
+}
+
+// Creates a list of batches from the data. TODO - this copies the data, but i think it would be better to slice it.
+func batchData(d *T.Dense, batchSize int) []*T.Dense {
+	var ret []*T.Dense
+	for i := 0; i < d.Shape()[0]; i += batchSize {
+		if i+batchSize <= d.Shape()[0] {
+			// This is a full batch
+			slice, err := d.Slice(T.S(i, i+batchSize))
+			if err != nil {
+				panic(err)
+			}
+			// Now we need to create a dense copy of the slice.
+			denseData := make([]float64, slice.Shape().TotalSize())
+			copy(denseData, slice.Data().([]float64))
+			denseSlice := T.New(T.WithShape(slice.Shape()...), T.WithBacking(denseData))
+			ret = append(ret, denseSlice)
+		}
+
+	}
+	return ret
+}
+
+type FitOpt func(*fitParams)
+
+type fitParams struct {
+	Epochs    int
+	LogEvery  int
+	Verbose   bool
+	ClearLine bool
+}
+
+// WithEpochs sets the number of epochs to train for.
+func WithEpochs(epochs int) FitOpt { return func(p *fitParams) { p.Epochs = epochs } }
+
+// WithLoggingEvery sets how often to log the loss.
+func WithLoggingEvery(epochs int) FitOpt { return func(p *fitParams) { p.LogEvery = epochs } }
+
+// WithVerbose sets whether to log the loss.
+func WithVerbose(verbose bool) FitOpt { return func(p *fitParams) { p.Verbose = verbose } }
+
+// WithClearLine sets whether to clear the line when logging the loss.
+func WithClearLine(clear bool) FitOpt { return func(p *fitParams) { p.ClearLine = clear } }
+
+func (m *Model) Fit(x, y *T.Dense, solver G.Solver, opts ...FitOpt) {
+	params := &fitParams{
+		Epochs:    1,
+		LogEvery:  1,
+		Verbose:   true,
+		ClearLine: true,
+	}
+	for _, o := range opts {
+		o(params)
+	}
+	batchSize := x.Shape()[0]
+	xBatches, yBatches := batchData(x, batchSize), batchData(y, batchSize)
+	for epoch := 0; epoch < params.Epochs; epoch++ {
+		loss := 0.0
+		for bi := range xBatches {
+			loss += m.FitBatch(xBatches[bi], yBatches[bi], solver)
+		}
+		if params.Verbose && ((epoch%params.LogEvery == 0) || (epoch == params.Epochs-1)) {
+			lineStart := "\n"
+			if params.ClearLine {
+				lineStart = "\r"
+			}
+			fmt.Printf("%sEpoch %d/%d - Loss: %f                    ", lineStart, epoch+1, params.Epochs, loss/float64(x.Shape()[0]))
+		}
+	}
 }

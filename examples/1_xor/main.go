@@ -46,12 +46,7 @@ func main() {
 	solver := G.NewAdamSolver(G.WithLearnRate(0.01))
 
 	// Train the model for 1000 epochs
-	for epoch := 0; epoch <= 1000; epoch++ {
-		loss := model.FitBatch(x, y, solver)
-		if epoch%100 == 0 {
-			fmt.Printf("Epoch: %-4v Loss %.4f\n", fmt.Sprint(epoch), loss)
-		}
-	}
+	model.Fit(x, y, solver, K.WithEpochs(1000), K.WithLoggingEvery(100))
 
 	/*OUTPUT
 	Epoch: 0    Loss 0.3305

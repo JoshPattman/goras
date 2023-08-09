@@ -49,6 +49,7 @@ func main() {
 	*/
 
 	// Ok lets now train as before. Note we only have to train the full model
+	// Also this time we are using fitBatch instead of fit just to show you can do it either way.
 	solver := G.NewAdamSolver(G.WithLearnRate(0.01))
 	for epoch := 0; epoch <= 1000; epoch++ {
 		loss := modelFull.FitBatch(x, y, solver)
