@@ -79,13 +79,13 @@ for i := 0; i < x.Shape()[0]; i++ {
   - `Deconvolution`
   - `Upsampling`
   - `Reshape`
+  - `Embedding`
 - Add these activations
   - `leaky_relu`
 - Add `L1` and `L2` regularlization
 - Add a `Fit` method to `Model` that splits the input into batch sized chunks, and shows a little loading bar
   - A `FitBatch` method already exists, but this requires the user to write the epochs loop and split the data into batches
 - Add a `Predict` method to `Model` that splits the input into batches
-- Figure out how to set certain layers in a model as trainable or not trainable
 - Check if GPU support is working for cuda. I think it should work, but I havn't got round to testing yet.
 - Better error handling
 - Better error checking

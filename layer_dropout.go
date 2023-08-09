@@ -10,7 +10,7 @@ type DropoutLayer struct {
 }
 
 func Dropout(m *Model, name string, dropoutProbability float64) *DropoutLayer {
-	d := &DropoutLayer{LayerBase{m.Graph, name}, dropoutProbability}
+	d := &DropoutLayer{LayerBase{m.Graph, name, false}, dropoutProbability}
 	m.AddLayer(d)
 	return d
 }

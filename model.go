@@ -55,8 +55,10 @@ func (m *Model) Build(inputNode, outputNode *G.Node, loss func(*G.Node, *G.Node)
 func (m *Model) Trainables() G.Nodes {
 	var ret G.Nodes
 	for _, l := range m.Layers {
-		for _, t := range l.Parameters() {
-			ret = append(ret, t)
+		if l.Trainable() {
+			for _, t := range l.Parameters() {
+				ret = append(ret, t)
+			}
 		}
 	}
 	return ret

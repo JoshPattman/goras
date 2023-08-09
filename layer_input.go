@@ -13,7 +13,7 @@ type InputLayer struct {
 // The shape shoudl include the batch size.
 // For example, if the input is a 2D image, the shape should be [batchSize, width, height, channels].
 func Input(m *Model, name string, shape ...int) *InputLayer {
-	i := &InputLayer{LayerBase{m.Graph, name}, G.NewMatrix(m.Graph, G.Float64, G.WithShape(shape...))}
+	i := &InputLayer{LayerBase{m.Graph, name, false}, G.NewMatrix(m.Graph, G.Float64, G.WithShape(shape...))}
 	m.AddLayer(i)
 	return i
 }

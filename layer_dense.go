@@ -16,7 +16,7 @@ type DenseLayer struct {
 // Dense creates a new dense layer on the specified model.
 // The layer will have the specified number of nodes, and therefor the output of the layer will have that many nodes.
 func Dense(m *Model, name string, nodes int) *DenseLayer {
-	d := &DenseLayer{LayerBase{m.Graph, name}, nil, nodes}
+	d := &DenseLayer{LayerBase{m.Graph, name, true}, nil, nodes}
 	m.AddLayer(d)
 	return d
 }
