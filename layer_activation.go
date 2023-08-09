@@ -1,6 +1,8 @@
 package goras
 
 import (
+	"fmt"
+
 	G "gorgonia.org/gorgonia"
 )
 
@@ -20,21 +22,29 @@ func Activation(m *Model, name string, activation string) *ActivationLayer {
 
 // Attach attaches the layer to a previous node.
 // It then returns the node that the layer outputs.
-func (a *ActivationLayer) Attach(n *G.Node) *G.Node {
+func (a *ActivationLayer) Attach(n *G.Node) (*G.Node, error) {
 	switch a.Activation {
 	case "sigmoid":
-		return G.Must(G.Sigmoid(n))
+		return G.Sigmoid(n)
 	case "relu":
-		return G.Must(G.Rectify(n))
+		return G.Rectify(n)
 	case "tanh":
-		return G.Must(G.Tanh(n))
+		return G.Tanh(n)
 	case "binary":
-		return G.Must(G.Gt(n, G.NewConstant(0.0), true))
+		return G.Gt(n, G.NewConstant(0.0), true)
 	case "softmax":
-		return G.Must(G.SoftMax(n, 1))
+		return G.SoftMax(n, 1)
 	default:
-		panic("Invalid activation")
+		return nil, fmt.Errorf("invalid activation '%s'", a.Activation)
 	}
+}
+
+func (a *ActivationLayer) MustAttach(n *G.Node) *G.Node {
+	n, err := a.Attach(n)
+	if err != nil {
+		panic(err)
+	}
+	return n
 }
 
 // Parameters returns a map of the parameters of the layer.

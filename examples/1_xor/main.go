@@ -134,11 +134,11 @@ func MakeModel() *K.Model {
 	inputs := K.Input(model, n.Next(), batchSize, inputNodes).Node
 	// Create the first Dense layer and its activation.
 	// Note that dense layers do not have an activation themselves, so you have to add one manually after
-	outputs := K.Dense(model, n.Next(), hiddenNodes).Attach(inputs)
-	outputs = K.Activation(model, n.Next(), "sigmoid").Attach(outputs)
+	outputs := K.Dense(model, n.Next(), hiddenNodes).MustAttach(inputs)
+	outputs = K.Activation(model, n.Next(), "sigmoid").MustAttach(outputs)
 	// Create the second Dense layer
-	outputs = K.Dense(model, n.Next(), outputNodes).Attach(outputs)
-	outputs = K.Activation(model, n.Next(), "sigmoid").Attach(outputs)
+	outputs = K.Dense(model, n.Next(), outputNodes).MustAttach(outputs)
+	outputs = K.Activation(model, n.Next(), "sigmoid").MustAttach(outputs)
 
 	// Build the rest of the model so we can train it and run it
 	// We are providing it with a mean squared error loss
