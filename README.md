@@ -71,9 +71,6 @@ for i := 0; i < x.Shape()[0]; i++ {
 
 ## Todo
 - Figure out how to allow models to have multiple inputs and outputs
-- Add these loss functions
-  - `BCE`
-  - `CCE`
 - Add these layers
   - `Recurrent`
   - `LSTM`
@@ -84,7 +81,7 @@ for i := 0; i < x.Shape()[0]; i++ {
   - `Reshape`
 - Add these activations
   - `leaky_relu`
-  - `softmax`
+- Add `L1` and `L2` regularlization
 - Add a `Fit` method to `Model` that splits the input into batch sized chunks, and shows a little loading bar
   - A `FitBatch` method already exists, but this requires the user to write the epochs loop and split the data into batches
 - Add a `Predict` method to `Model` that splits the input into batches
