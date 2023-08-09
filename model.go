@@ -100,11 +100,13 @@ func (m *Model) GetParams() map[string]*T.Dense {
 // SetParams sets the parameters in the model, which can be retrieved with Model.GetParams.
 // It will only load parameters with matching names, and will ignore any others.
 // This means you can load parameters from a model with a different architecture, as long as the names match on equivalent layers.
-func (m *Model) SetParams(params map[string]*T.Dense) {
+func (m *Model) SetParams(params map[string]*T.Dense) error {
 	for _, l := range m.Layers {
 		for k, v := range l.Parameters() {
 			if p, ok := params[l.Name()+":"+k]; ok {
-				G.Let(v, p)
+				if err := G.Let(v, p); err != nil {
+					return fmt.Errorf("error setting parameter %s: %s", l.Name()+":"+k, err)
+				}
 			}
 		}
 	}
@@ -112,23 +114,21 @@ func (m *Model) SetParams(params map[string]*T.Dense) {
 
 // WriteParams writes the parameters in gob format to an io.Writer.
 // The params are retrieved with Model.GetParams.
-func (m *Model) WriteParams(w io.Writer) {
+func (m *Model) WriteParams(w io.Writer) error {
 	params := m.GetParams()
 	enc := gob.NewEncoder(w)
-	if err := enc.Encode(params); err != nil {
-		panic(err)
-	}
+	return enc.Encode(params)
 }
 
 // ReadParams reads the parameters in gob format from an io.Reader.
 // The params are retrieved with Model.GetParams.
-func (m *Model) ReadParams(r io.Reader) {
+func (m *Model) ReadParams(r io.Reader) error {
 	var params map[string]*T.Dense
 	dec := gob.NewDecoder(r)
 	if err := dec.Decode(&params); err != nil {
-		panic(err)
+		return err
 	}
-	m.SetParams(params)
+	return m.SetParams(params)
 }
 
 // BindParamsFrom binds the parameters in the model to the parameters in another model, meaning layers with the same name will share the same tensors.
@@ -136,12 +136,14 @@ func (m *Model) ReadParams(r io.Reader) {
 // This can be called multiple times, where later binds may override earlier ones.
 // For example, if you are making an autoencoder, you would have one main model for training, and an encoder model and decoder model which are bound to that.
 // That then allows you to run partial bits of the network.
-func (m *Model) BindParamsFrom(m1 *Model) {
+func (m *Model) BindParamsFrom(m1 *Model) error {
 	paramsSrc := m1.GetParams()
 	for _, l := range m.Layers {
 		for k, v := range l.Parameters() {
 			if p, ok := paramsSrc[l.Name()+":"+k]; ok {
-				G.Let(v, p)
+				if err := G.Let(v, p); err != nil {
+					return fmt.Errorf("error binding parameter %s: %s", l.Name()+":"+k, err)
+				}
 			}
 		}
 	}
