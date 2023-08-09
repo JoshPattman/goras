@@ -110,6 +110,7 @@ func (m *Model) SetParams(params map[string]*T.Dense) error {
 			}
 		}
 	}
+	return nil
 }
 
 // WriteParams writes the parameters in gob format to an io.Writer.
@@ -147,31 +148,42 @@ func (m *Model) BindParamsFrom(m1 *Model) error {
 			}
 		}
 	}
+	return nil
 }
 
 // PredictBatch runs the model on a batch of input data. The batch size must match the input node shape.
-func (m *Model) PredictBatch(input *T.Dense) *T.Dense {
+func (m *Model) PredictBatch(input *T.Dense) (*T.Dense, error) {
 	m.Machine.Reset()
-	G.Let(m.InputNode, input)
-	G.Let(m.TargetOutputNode, T.New(T.WithShape(m.TargetOutputNode.Shape()...), T.WithBacking(make([]float64, m.TargetOutputNode.Shape().TotalSize()))))
-	if err := m.Machine.RunAll(); err != nil {
-		panic(err)
+	if err := G.Let(m.InputNode, input); err != nil {
+		return nil, err
 	}
-	return T.New(T.WithShape(m.OutputValue.Shape()...), T.WithBacking(m.OutputValue.Data()))
+	if err := G.Let(m.TargetOutputNode, T.New(T.WithShape(m.TargetOutputNode.Shape()...), T.WithBacking(make([]float64, m.TargetOutputNode.Shape().TotalSize())))); err != nil {
+		return nil, err
+	}
+	if err := m.Machine.RunAll(); err != nil {
+		return nil, err
+	}
+	return T.New(T.WithShape(m.OutputValue.Shape()...), T.WithBacking(m.OutputValue.Data())), nil
 }
 
 // FitBatch runs the model on a batch of input data, and then trains the model on the target data.
 // The solver used is passed in as an argument.
 // IMPORTANT NOTE: Currently, when the data is batched, the last batch of data will be discarded if the x size does not evenly divide the batch size.
-func (m *Model) FitBatch(input, target *T.Dense, solver G.Solver) float64 {
+func (m *Model) FitBatch(input, target *T.Dense, solver G.Solver) (float64, error) {
 	m.Machine.Reset()
-	G.Let(m.InputNode, input)
-	G.Let(m.TargetOutputNode, target)
-	if err := m.Machine.RunAll(); err != nil {
-		panic(err)
+	if err := G.Let(m.InputNode, input); err != nil {
+		return 0, err
 	}
-	solver.Step(G.NodesToValueGrads(m.Trainables()))
-	return m.LossValue.Data().(float64)
+	if err := G.Let(m.TargetOutputNode, target); err != nil {
+		return 0, err
+	}
+	if err := m.Machine.RunAll(); err != nil {
+		return 0, err
+	}
+	if err := solver.Step(G.NodesToValueGrads(m.Trainables())); err != nil {
+		return 0, err
+	}
+	return m.LossValue.Data().(float64), nil
 }
 
 // Creates a list of batches from the data. TODO - this copies the data, but i think it would be better to slice it.
@@ -216,7 +228,7 @@ func WithVerbose(verbose bool) FitOpt { return func(p *fitParams) { p.Verbose = 
 // WithClearLine sets whether to clear the line when logging the loss.
 func WithClearLine(clear bool) FitOpt { return func(p *fitParams) { p.ClearLine = clear } }
 
-func (m *Model) Fit(x, y *T.Dense, solver G.Solver, opts ...FitOpt) {
+func (m *Model) Fit(x, y *T.Dense, solver G.Solver, opts ...FitOpt) error {
 	params := &fitParams{
 		Epochs:    1,
 		LogEvery:  1,
@@ -231,7 +243,11 @@ func (m *Model) Fit(x, y *T.Dense, solver G.Solver, opts ...FitOpt) {
 	for epoch := 0; epoch < params.Epochs; epoch++ {
 		loss := 0.0
 		for bi := range xBatches {
-			loss += m.FitBatch(xBatches[bi], yBatches[bi], solver)
+			batchLoss, err := m.FitBatch(xBatches[bi], yBatches[bi], solver)
+			if err != nil {
+				return err
+			}
+			loss += batchLoss
 		}
 		if params.Verbose && ((epoch%params.LogEvery == 0) || (epoch == params.Epochs-1)) {
 			lineStart := "\n"
@@ -241,4 +257,5 @@ func (m *Model) Fit(x, y *T.Dense, solver G.Solver, opts ...FitOpt) {
 			fmt.Printf("%sEpoch %d/%d - Loss: %f                    ", lineStart, epoch+1, params.Epochs, loss/float64(x.Shape()[0]))
 		}
 	}
+	return nil
 }
