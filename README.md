@@ -91,3 +91,5 @@ for i := 0; i < x.Shape()[0]; i++ {
 - Add a `Predict` method to `Model` that splits the input into batches
 - Figure out how to set certain layers in a model as trainable or not trainable
 - Check if GPU support is working for cuda. I think it should work, but I havn't got round to testing yet.
+- Better error handling
+- Better error checking
