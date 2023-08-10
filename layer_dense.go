@@ -22,7 +22,6 @@ func Dense(m *Model, name string, nodes int) *DenseLayer {
 }
 
 // Attach attaches the layer to a previous node.
-// It then returns the node that the layer outputs.
 func (l *DenseLayer) Attach(n *G.Node) (*G.Node, error) {
 	if err := validateShape(n.Shape(), valNDims(2)); err != nil {
 		return nil, err
@@ -43,9 +42,7 @@ func (l *DenseLayer) Attach(n *G.Node) (*G.Node, error) {
 	return multiplied, nil
 }
 
-// Attach attaches the layer to a previous node.
-// It then returns the node that the layer outputs.
-// Panics if there is an error.
+// MustAttach attaches the layer to a previous node.
 func (l *DenseLayer) MustAttach(n *G.Node) *G.Node {
 	n, err := l.Attach(n)
 	if err != nil {
@@ -59,4 +56,5 @@ func (l *DenseLayer) Parameters() map[string]*G.Node {
 	return map[string]*G.Node{"weights": l.Weights}
 }
 
+// Type returns the type of the layer.
 func (l *DenseLayer) Type() string { return "dense" }

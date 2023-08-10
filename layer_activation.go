@@ -20,8 +20,7 @@ func Activation(m *Model, name string, activation string) *ActivationLayer {
 	return a
 }
 
-// Attach attaches the layer to a previous node.
-// It then returns the node that the layer outputs.
+// Attach attaches this layer to a previous node.
 func (l *ActivationLayer) Attach(n *G.Node) (*G.Node, error) {
 	switch l.Activation {
 	case "sigmoid":
@@ -39,6 +38,7 @@ func (l *ActivationLayer) Attach(n *G.Node) (*G.Node, error) {
 	}
 }
 
+// MustAttach attaches this layer to a previous node and panics on error.
 func (l *ActivationLayer) MustAttach(n *G.Node) *G.Node {
 	n, err := l.Attach(n)
 	if err != nil {
@@ -59,4 +59,5 @@ func IsValidActivation(ac string) bool {
 	}
 }
 
+// Type returns the type of the layer as a string.
 func (l *ActivationLayer) Type() string { return "activation" }

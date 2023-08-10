@@ -10,7 +10,7 @@ type InputLayer struct {
 
 // Attach attaches the layer to a previous node.
 // It then returns the node that the layer outputs.
-// The shape shoudl include the batch size.
+// The shape should include the batch size.
 // For example, if the input is a 2D image, the shape should be [batchSize, width, height, channels].
 func Input(m *Model, name string, shape ...int) *InputLayer {
 	if err := validateShape(shape, valAtLeastNDims(1)); err != nil {

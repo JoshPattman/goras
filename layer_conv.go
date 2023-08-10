@@ -4,6 +4,7 @@ import (
 	G "gorgonia.org/gorgonia"
 )
 
+// Conv2DLayer is a 2D convolutional layer.
 type Conv2DLayer struct {
 	LayerBase
 	Kernels    *G.Node
@@ -13,6 +14,8 @@ type Conv2DLayer struct {
 	Padding    string
 }
 
+// SimpleConv2D is a constructor to create a 2D convolutional layer.
+// It has a kernel shape of [kernelSize, kernelSize], a stride of [kernelSize, kernelSize], and padding of "same".
 func SimpleConv2D(m *Model, name string, kernelSize int, numKernels int) *Conv2DLayer {
 	l := &Conv2DLayer{
 		LayerBase{m.Graph, name, true, m.DType},
@@ -26,6 +29,22 @@ func SimpleConv2D(m *Model, name string, kernelSize int, numKernels int) *Conv2D
 	return l
 }
 
+// Conv2D is a constructor to create a 2D convolutional layer.
+// Options for padding are "same" or "valid".
+func Conv2D(m *Model, name string, kernelShape, stride []int, padding string, numKernels int) *Conv2DLayer {
+	l := &Conv2DLayer{
+		LayerBase{m.Graph, name, true, m.DType},
+		nil,
+		kernelShape,
+		numKernels,
+		stride,
+		padding,
+	}
+	m.AddLayer(l)
+	return l
+}
+
+// Attach attaches this layer to a previous node.
 func (l *Conv2DLayer) Attach(x *G.Node) (*G.Node, error) {
 	if err := validateShape(x.Shape(), valNDims(4)); err != nil {
 		return nil, err
@@ -39,9 +58,7 @@ func (l *Conv2DLayer) Attach(x *G.Node) (*G.Node, error) {
 	return G.Conv2d(x, l.Kernels, l.KernelSize, pad, l.Stride, []int{1, 1})
 }
 
-// Attach attaches the layer to a previous node.
-// It then returns the node that the layer outputs.
-// Panics if there is an error.
+// MustAttach attaches this layer to a previous node and panics if there is an error.
 func (l *Conv2DLayer) MustAttach(n *G.Node) *G.Node {
 	n, err := l.Attach(n)
 	if err != nil {
@@ -55,4 +72,5 @@ func (l *Conv2DLayer) Parameters() map[string]*G.Node {
 	return map[string]*G.Node{"kernels": l.Kernels}
 }
 
+// Type returns the type of the layer as a string.
 func (l *Conv2DLayer) Type() string { return "conv2d" }
