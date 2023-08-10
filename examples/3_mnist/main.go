@@ -1,5 +1,8 @@
 package main
 
+// In this example, we create a model to classify MNIST digits.
+// It uses convolution2d and maxpool2d layers, and it is the same underlying model as https://gorgonia.org/tutorials/mnist/
+
 import (
 	"fmt"
 
@@ -15,11 +18,11 @@ func main() {
 		panic(err)
 	}
 	fmt.Println("x:", x.Shape())
-	fmt.Println("x:", y.Shape())
+	fmt.Println("y:", y.Shape())
 
 	/*OUTPUT
 	x: (60000, 784)
-	x: (60000, 10)
+	y: (60000, 10)
 	*/
 
 	// We need to reshape the x data to be (batch_size, channels, img_x, img_y)
