@@ -1,12 +1,33 @@
 package main
 
 import (
+	"fmt"
+	"log"
+
 	K "github.com/JoshPattman/goras"
+	G "gorgonia.org/gorgonia"
 	T "gorgonia.org/tensor"
 )
 
 func main() {
-	MakeModel()
+	x, y, err := Load("train", "./mnist", T.Float64)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("x:", x.Shape())
+	fmt.Println("x:", y.Shape())
+
+	x.Reshape(60000, 1, 28, 28)
+	fmt.Println("x:", x.Shape())
+
+	model := MakeModel()
+
+	solver := G.NewAdamSolver(G.WithLearnRate(0.001))
+	err = model.Fit(K.V(x.(*T.Dense)), K.V(y.(*T.Dense)), solver, K.WithVerbose(true), K.WithEpochs(5), K.WithLoggingEvery(5))
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Done")
 }
 
 // This uses much of the same code from https://gorgonia.org/tutorials/mnist/
@@ -36,7 +57,6 @@ func MakeModel() *K.Model {
 	outputs = K.SimpleMaxPooling2D(model, n.Next(), 2).MustAttach(outputs)
 
 	// Reshape and dropout
-	// There is no reshape in goras yet, so we will use the gorgonia one
 	b, c, h, w := outputs.Shape()[0], outputs.Shape()[1], outputs.Shape()[2], outputs.Shape()[3]
 	outputs = K.Reshape(model, n.Next(), T.Shape{b, c * h * w}).MustAttach(outputs)
 	outputs = K.Dropout(model, n.Next(), 0.2).MustAttach(outputs)
