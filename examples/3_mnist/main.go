@@ -11,9 +11,12 @@ import (
 	T "gorgonia.org/tensor"
 )
 
+// We will define a dtype. Float32 in theory should be faster.
+var dType = T.Float32
+
 func main() {
 	// Lets start by loading MNIST into tensors
-	x, y, err := Load("train", "./mnist", T.Float64)
+	x, y, err := Load("train", "./mnist", dType)
 	if err != nil {
 		panic(err)
 	}
@@ -135,7 +138,7 @@ func MakeModel() *K.Model {
 	batchSize := 16
 
 	// Create the model and namer
-	model := K.NewModel(T.Float64)
+	model := K.NewModel(dType)
 	n := K.NewNamer("model")
 
 	// Input shape is (batch_size, channels(this is one for b&w), img_x, img_y)

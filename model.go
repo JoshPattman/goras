@@ -203,7 +203,7 @@ func (m *Model) PredictBatch(inputs []T.Tensor) (*T.Dense, error) {
 			return nil, err
 		}
 	}
-	if err := G.Let(m.TargetOutputNode, T.New(T.WithShape(m.TargetOutputNode.Shape()...), T.WithBacking(make([]float64, m.TargetOutputNode.Shape().TotalSize())))); err != nil {
+	if err := G.Let(m.TargetOutputNode, T.New(T.WithShape(m.TargetOutputNode.Shape()...), T.Of(m.DType))); err != nil {
 		return nil, err
 	}
 	if err := m.Machine.RunAll(); err != nil {
@@ -238,7 +238,14 @@ func (m *Model) FitBatch(inputs, targets []T.Tensor, solver G.Solver) (float64, 
 	if err := solver.Step(G.NodesToValueGrads(m.Trainables())); err != nil {
 		return 0, err
 	}
-	return m.LossValue.Data().(float64), nil
+	loss := 0.0
+	switch m.DType {
+	case T.Float64:
+		loss = m.LossValue.Data().(float64)
+	case T.Float32:
+		loss = float64(m.LossValue.Data().(float32))
+	}
+	return loss, nil
 }
 
 type FitOpt func(*fitParams)
