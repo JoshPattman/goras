@@ -33,18 +33,52 @@ func (m *Model) AddLayer(l Layer) {
 	m.Layers = append(m.Layers, l)
 }
 
+type buildParams struct {
+	inputNodes  []*G.Node
+	outputNodes []*G.Node
+	losses      []func(*G.Node, *G.Node) (*G.Node, error)
+}
+type BuildOpts func(*buildParams)
+
+func WithInputs(inputNodes ...*G.Node) BuildOpts {
+	return func(b *buildParams) { b.inputNodes = inputNodes }
+}
+
+func WithOutputs(outputNodes ...*G.Node) BuildOpts {
+	return func(b *buildParams) { b.outputNodes = outputNodes }
+}
+
+func WithLosses(losses ...func(*G.Node, *G.Node) (*G.Node, error)) BuildOpts {
+	return func(b *buildParams) { b.losses = losses }
+}
+
 // Build builds the model, using a specified input and output node.
 // It adds the loss function to the graph, and creates the machine.
 // This should only be called once per model.
-func (m *Model) Build(inputNode, outputNode *G.Node, loss func(*G.Node, *G.Node) (*G.Node, error)) error {
+func (m *Model) Build(opts ...BuildOpts) error {
+	buildParams := &buildParams{}
+	for _, opt := range opts {
+		opt(buildParams)
+	}
+	if buildParams.inputNodes == nil || buildParams.outputNodes == nil || buildParams.losses == nil {
+		return fmt.Errorf("inputNodes, outputNodes and losses must be specified")
+	}
+	if len(buildParams.outputNodes) != len(buildParams.losses) {
+		return fmt.Errorf("outputNodes and losses must be the same length")
+	}
+	// For now, until i figure out multiple inputs and outputs, ensure there is examtly one input and output
+	if len(buildParams.inputNodes) != 1 || len(buildParams.outputNodes) != 1 {
+		return fmt.Errorf("only one input and output is supported at this time, this will change soon")
+	}
+
 	// Store input and output nodes
-	m.InputNode = inputNode
-	m.OutputNode = outputNode
+	m.InputNode = buildParams.inputNodes[0]
+	m.OutputNode = buildParams.outputNodes[0]
 	// Read the output to a value
 	G.Read(m.OutputNode, &m.OutputValue)
 	// Define loss function
 	m.TargetOutputNode = G.NewMatrix(m.Graph, G.Float64, G.WithShape(m.OutputNode.Shape()...))
-	lossNode, err := loss(m.OutputNode, m.TargetOutputNode)
+	lossNode, err := buildParams.losses[0](m.OutputNode, m.TargetOutputNode)
 	if err != nil {
 		return err
 	}
@@ -59,8 +93,8 @@ func (m *Model) Build(inputNode, outputNode *G.Node, loss func(*G.Node, *G.Node)
 	return nil
 }
 
-func (m *Model) MustBuild(inputNode, outputNode *G.Node, loss func(*G.Node, *G.Node) (*G.Node, error)) {
-	err := m.Build(inputNode, outputNode, loss)
+func (m *Model) MustBuild(opts ...BuildOpts) {
+	err := m.Build(opts...)
 	if err != nil {
 		panic(err)
 	}
