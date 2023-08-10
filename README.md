@@ -83,3 +83,6 @@ for i := 0; i < x.Shape()[0]; i++ {
 - Currently, batching for training and prediction discards the remainder of the last batch (eg batch size 8, 17 elements, will only predict 16 things and the last thing will be disacrded).
   - I will fix this once I hear back on an issue https://github.com/gorgonia/gorgonia/issues/204
 - Better checking for correct shapes of tensors
+- Wherever possible, use T.Tensor instead of what is currently used, which is *T.Dense
+- Allow the user to choose the data type for the model to use
+- Test and fix softmax and/or CCE

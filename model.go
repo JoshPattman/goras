@@ -186,10 +186,10 @@ func (m *Model) BindParamsFrom(m1 *Model) error {
 }
 
 // V is a helper function to create a slice of tensors. It should be used when providing a model with input and target data.
-func V(ts ...*T.Dense) []*T.Dense { return ts }
+func V(ts ...T.Tensor) []T.Tensor { return ts }
 
 // PredictBatch runs the model on a batch of input data. The batch size must match the input node shape.
-func (m *Model) PredictBatch(inputs []*T.Dense) (*T.Dense, error) {
+func (m *Model) PredictBatch(inputs []T.Tensor) (*T.Dense, error) {
 	if len(inputs) != len(m.InputNodes) {
 		return nil, fmt.Errorf("number of inputs (%v) must be the same as number of input nodes (%v)", len(inputs), len(m.InputNodes))
 	}
@@ -214,7 +214,7 @@ func (m *Model) PredictBatch(inputs []*T.Dense) (*T.Dense, error) {
 // FitBatch runs the model on a batch of input data, and then trains the model on the target data.
 // The solver used is passed in as an argument.
 // IMPORTANT NOTE: Currently, when the data is batched, the last batch of data will be discarded if the x size does not evenly divide the batch size.
-func (m *Model) FitBatch(inputs, targets []*T.Dense, solver G.Solver) (float64, error) {
+func (m *Model) FitBatch(inputs, targets []T.Tensor, solver G.Solver) (float64, error) {
 	if len(inputs) != 1 || len(targets) != 1 {
 		return 0, fmt.Errorf("number of inputs and targets must be 1 at this time")
 	}
@@ -261,7 +261,7 @@ func WithVerbose(verbose bool) FitOpt { return func(p *fitParams) { p.Verbose = 
 // WithClearLine sets whether to clear the line when logging the loss.
 func WithClearLine(clear bool) FitOpt { return func(p *fitParams) { p.ClearLine = clear } }
 
-func (m *Model) Fit(xs, ys []*T.Dense, solver G.Solver, opts ...FitOpt) error {
+func (m *Model) Fit(xs, ys []T.Tensor, solver G.Solver, opts ...FitOpt) error {
 	params := &fitParams{
 		Epochs:    1,
 		LogEvery:  1,
@@ -291,6 +291,9 @@ func (m *Model) Fit(xs, ys []*T.Dense, solver G.Solver, opts ...FitOpt) error {
 			fmt.Printf("%sEpoch %d/%d - Loss: %f                    ", lineStart, epoch+1, params.Epochs, loss/float64(xs[0].Shape()[0]))
 		}
 	}
+	if params.Verbose {
+		fmt.Println()
+	}
 	return nil
 }
 
@@ -298,23 +301,19 @@ func (m *Model) getCurrentBatchSize() int {
 	return m.InputNodes[0].Shape()[0]
 }
 
-// Creates a list of batches from the data. The data is a slice of tensors, representing multiple inputs. TODO - this copies the data, but i think it would be better to slice it.
-func batchMultiData(ds []*T.Dense, batchSize int) [][]*T.Dense {
-	var ret [][]*T.Dense
+// Creates a list of batches from the data. The data is a slice of tensors, representing multiple inputs.
+func batchMultiData(ds []T.Tensor, batchSize int) [][]T.Tensor {
+	var ret [][]T.Tensor
 	for i := 0; i < ds[0].Shape()[0]; i += batchSize {
 		if i+batchSize <= ds[0].Shape()[0] { // TODO - This ignores the remainder - it should do somthing else
 			// This is a full batch
-			var batch []*T.Dense
+			var batch []T.Tensor
 			for _, d := range ds {
 				slice, err := d.Slice(T.S(i, i+batchSize))
 				if err != nil {
-					panic(err)
+					panic(err) // TODO - handle this error
 				}
-				// Now we need to create a dense copy of the slice.
-				denseData := make([]float64, slice.Shape().TotalSize())
-				copy(denseData, slice.Data().([]float64))
-				denseSlice := T.New(T.WithShape(slice.Shape()...), T.WithBacking(denseData))
-				batch = append(batch, denseSlice)
+				batch = append(batch, slice)
 			}
 			ret = append(ret, batch)
 		}
@@ -323,7 +322,7 @@ func batchMultiData(ds []*T.Dense, batchSize int) [][]*T.Dense {
 	return ret
 }
 
-func ensureCorrectBatchSize(batchData *T.Dense, batchSize int) error {
+func ensureCorrectBatchSize(batchData T.Tensor, batchSize int) error {
 	if batchData.Shape()[0] != batchSize {
 		return fmt.Errorf("incorrect batch size - expected %d, got %d", batchSize, batchData.Shape()[0])
 	}

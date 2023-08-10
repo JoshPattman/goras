@@ -3,3 +3,4 @@ go 1.20
 use ./
 use ./examples/1_xor
 use ./examples/2_xor_with_intermediate
+use ./examples/3_mnist
