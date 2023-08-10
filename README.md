@@ -70,11 +70,10 @@ for i := 0; i < x.Shape()[0]; i++ {
 - Add these layers
   - `Recurrent`
   - `LSTM`
-  - `Convolution`
-  - `Pooling`
+  - `Convolution` - Simple implentation already
+  - `Pooling` - Simple implentation already
   - `Deconvolution`
   - `Upsampling`
-  - `Reshape`
   - `Embedding`
 - Add these activations
   - `leaky_relu`
