@@ -16,7 +16,7 @@ type Model struct {
 	Graph            *G.ExprGraph
 	Layers           []Layer
 	Machine          G.VM
-	InputNode        *G.Node
+	InputNodes       []*G.Node
 	OutputNode       *G.Node
 	OutputValue      G.Value
 	LossValue        G.Value
@@ -72,7 +72,7 @@ func (m *Model) Build(opts ...BuildOpts) error {
 	}
 
 	// Store input and output nodes
-	m.InputNode = buildParams.inputNodes[0]
+	m.InputNodes = buildParams.inputNodes
 	m.OutputNode = buildParams.outputNodes[0]
 	// Read the output to a value
 	G.Read(m.OutputNode, &m.OutputValue)
@@ -190,16 +190,17 @@ func V(ts ...*T.Dense) []*T.Dense { return ts }
 
 // PredictBatch runs the model on a batch of input data. The batch size must match the input node shape.
 func (m *Model) PredictBatch(inputs []*T.Dense) (*T.Dense, error) {
-	if len(inputs) != 1 {
-		return nil, fmt.Errorf("number of inputs must be 1 at this time")
+	if len(inputs) != len(m.InputNodes) {
+		return nil, fmt.Errorf("number of inputs (%f) must be the same as number of input nodes (%f)", len(inputs), len(m.InputNodes))
 	}
-	input := inputs[0]
-	if err := ensureCorrectBatchSize(input, m.getCurrentBatchSize()); err != nil {
+	if err := ensureCorrectBatchSize(inputs[0], m.getCurrentBatchSize()); err != nil {
 		return nil, err
 	}
 	m.Machine.Reset()
-	if err := G.Let(m.InputNode, input); err != nil {
-		return nil, err
+	for i := range inputs {
+		if err := G.Let(m.InputNodes[i], inputs[i]); err != nil {
+			return nil, err
+		}
 	}
 	if err := G.Let(m.TargetOutputNode, T.New(T.WithShape(m.TargetOutputNode.Shape()...), T.WithBacking(make([]float64, m.TargetOutputNode.Shape().TotalSize())))); err != nil {
 		return nil, err
@@ -217,13 +218,15 @@ func (m *Model) FitBatch(inputs, targets []*T.Dense, solver G.Solver) (float64, 
 	if len(inputs) != 1 || len(targets) != 1 {
 		return 0, fmt.Errorf("number of inputs and targets must be 1 at this time")
 	}
-	input, target := inputs[0], targets[0]
-	if err := ensureCorrectBatchSize(input, m.getCurrentBatchSize()); err != nil {
+	target := targets[0]
+	if err := ensureCorrectBatchSize(inputs[0], m.getCurrentBatchSize()); err != nil {
 		return 0, err
 	}
 	m.Machine.Reset()
-	if err := G.Let(m.InputNode, input); err != nil {
-		return 0, err
+	for i := range inputs {
+		if err := G.Let(m.InputNodes[i], inputs[i]); err != nil {
+			return 0, err
+		}
 	}
 	if err := G.Let(m.TargetOutputNode, target); err != nil {
 		return 0, err
@@ -292,7 +295,7 @@ func (m *Model) Fit(xs, ys []*T.Dense, solver G.Solver, opts ...FitOpt) error {
 }
 
 func (m *Model) getCurrentBatchSize() int {
-	return m.InputNode.Shape()[0]
+	return m.InputNodes[0].Shape()[0]
 }
 
 // Creates a list of batches from the data. TODO - this copies the data, but i think it would be better to slice it.
