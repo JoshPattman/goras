@@ -29,12 +29,10 @@ func SimpleConv2D(m *Model, name string, kernelSize int, numKernels int) *Conv2D
 func (l *Conv2DLayer) Attach(x *G.Node) (*G.Node, error) {
 	pad := []int{0, 0} // padding=valid
 	if l.Padding == "same" {
-		padH := calculateSamePadding(x.Shape()[2], l.KernelSize[0], l.Stride[0])
-		padW := calculateSamePadding(x.Shape()[3], l.KernelSize[1], l.Stride[1])
-		pad = append(padH, padW...)
+		pad = []int{l.KernelSize[0] / 2, l.KernelSize[1] / 2}
 	}
 	previousKernels := x.Shape()[1]
-	l.Kernels = G.NewMatrix(l.Graph, G.Float64, G.WithShape(l.NumKernels, previousKernels, l.KernelSize[0], l.KernelSize[1]), G.WithInit(G.GlorotN(1.0)))
+	l.Kernels = G.NewTensor(l.Graph, G.Float64, 4, G.WithShape(l.NumKernels, previousKernels, l.KernelSize[0], l.KernelSize[1]), G.WithInit(G.GlorotN(1.0)))
 	return G.Conv2d(x, l.Kernels, l.KernelSize, pad, l.Stride, []int{1, 1})
 }
 
