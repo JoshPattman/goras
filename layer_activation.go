@@ -7,6 +7,7 @@ import (
 )
 
 // ActivationLayer is a layer that applies an activation function to its input.
+//   - Input/Output Shape: any shape
 type ActivationLayer struct {
 	LayerBase
 	Activation string

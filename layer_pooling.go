@@ -7,6 +7,9 @@ import (
 	T "gorgonia.org/tensor"
 )
 
+// MaxPooling2DLayer is a max pooling layer.
+//   - Input Shape: (batch_size, num_channels, img_height, img_width)
+//   - Output Shape: (batch_size, num_channels, img_height, img_width) [img_height and img_width will be smaller than the input]
 type MaxPooling2DLayer struct {
 	LayerBase
 	PoolSize []int
@@ -16,9 +19,6 @@ type MaxPooling2DLayer struct {
 
 // SimpleMaxPooling2D creates a new max pooling layer on the specified model.
 // It will have padding=same stride=poolSize, and it is the same in both dims.
-// This means if the input has dims (x,y), and pooling is applied with pool size p,
-// then the output will have dims (x/p, y/p) IF x and y are divisible by p.
-// Input shape must be BCHW (batch, channels, height, width)
 func SimpleMaxPooling2D(m *Model, name string, poolSize int) *MaxPooling2DLayer {
 	l := &MaxPooling2DLayer{
 		LayerBase{m.Graph, name, false, m.DType},

@@ -4,6 +4,8 @@ import (
 	G "gorgonia.org/gorgonia"
 )
 
+// DropoutLayer is a dropout layer.
+//   - Input/Output Shape: any shape
 type DropoutLayer struct {
 	LayerBase
 	DropoutProbability float64

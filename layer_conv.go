@@ -5,6 +5,8 @@ import (
 )
 
 // Conv2DLayer is a 2D convolutional layer.
+//   - Input Shape: (batch_size, previous_kernels/previous_channels, img_width, img_height)
+//   - Output Shape: (batch_size, num_kernels, img_width, img_height)
 type Conv2DLayer struct {
 	LayerBase
 	Kernels    *G.Node

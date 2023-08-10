@@ -3,15 +3,14 @@ package goras
 import G "gorgonia.org/gorgonia"
 
 // InputLayer is a layer that takes an input of a specific shape.
+//   - Input/Output Shape: (batch_size, ...other_dims) [the specified shape]
 type InputLayer struct {
 	LayerBase
 	Node *G.Node
 }
 
-// Attach attaches the layer to a previous node.
-// It then returns the node that the layer outputs.
-// The shape should include the batch size.
-// For example, if the input is a 2D image, the shape should be [batchSize, width, height, channels].
+// Input creates a new input layer on the specified model.
+// To access the resulting *Node, use the .Node field.
 func Input(m *Model, name string, shape ...int) *InputLayer {
 	if err := validateShape(shape, valAtLeastNDims(1)); err != nil {
 		panic(err)

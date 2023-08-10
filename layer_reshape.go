@@ -5,6 +5,9 @@ import (
 	T "gorgonia.org/tensor"
 )
 
+// ReshapeLayer is a reshape layer.
+//   - Input Shape: any shape
+//   - Output Shape: the specified shape [as long as both shapes have the same volume]
 type ReshapeLayer struct {
 	LayerBase
 	ToShape T.Shape
