@@ -135,7 +135,7 @@ func MakeModel() *K.Model {
 	batchSize := 16
 
 	// Create the model and namer
-	model := K.NewModel()
+	model := K.NewModel(T.Float64)
 	n := K.NewNamer("model")
 
 	// Input shape is (batch_size, channels(this is one for b&w), img_x, img_y)

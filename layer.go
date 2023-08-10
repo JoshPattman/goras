@@ -2,6 +2,7 @@ package goras
 
 import (
 	G "gorgonia.org/gorgonia"
+	T "gorgonia.org/tensor"
 )
 
 // Layer is an interface that all layers must implement to be able to be added to a model.
@@ -18,6 +19,7 @@ type LayerBase struct {
 	Graph       *G.ExprGraph
 	LayerName   string
 	IsTrainable bool
+	DType       T.Dtype
 }
 
 // Name returns the name of the layer.

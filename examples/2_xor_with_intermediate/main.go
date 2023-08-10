@@ -132,7 +132,7 @@ func decoder(model *K.Model, inputs *G.Node) *G.Node {
 // Function to create a new model with randomized weights
 func MakeModel(isJustForEncoding bool) *K.Model {
 	// Create the empty model and a Namer to provide names to the layers
-	model := K.NewModel()
+	model := K.NewModel(T.Float64)
 	n := K.NewNamer("model")
 
 	// Create the input layer

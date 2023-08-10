@@ -15,7 +15,7 @@ type ActivationLayer struct {
 // Activation creates a new ActivationLayer on the Model with the given activation function.
 // The activation function can be one of ["sigmoid", "relu", "tanh", "binary", "softmax"].
 func Activation(m *Model, name string, activation string) *ActivationLayer {
-	a := &ActivationLayer{LayerBase{m.Graph, name, false}, activation}
+	a := &ActivationLayer{LayerBase{m.Graph, name, false, m.DType}, activation}
 	m.AddLayer(a)
 	return a
 }
@@ -31,7 +31,7 @@ func (l *ActivationLayer) Attach(n *G.Node) (*G.Node, error) {
 	case "tanh":
 		return G.Tanh(n)
 	case "binary":
-		return G.Gt(n, G.NewConstant(0.0), true)
+		return G.Gt(n, G.NewConstant(0.0, G.WithType(l.DType)), true)
 	case "softmax":
 		return G.SoftMax(n, 1)
 	default:

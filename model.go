@@ -21,11 +21,12 @@ type Model struct {
 	OutputValue      G.Value
 	LossValue        G.Value
 	TargetOutputNode *G.Node
+	DType            T.Dtype
 }
 
 // NewModel creates a new model with no layers
-func NewModel() *Model {
-	return &Model{Graph: G.NewGraph(), Layers: []Layer{}}
+func NewModel(dataType T.Dtype) *Model {
+	return &Model{Graph: G.NewGraph(), Layers: []Layer{}, DType: dataType}
 }
 
 // AddLayer adds a layer to the model. You usually don't need to call this directly, as the layer constructors do it for you.
@@ -77,7 +78,7 @@ func (m *Model) Build(opts ...BuildOpts) error {
 	// Read the output to a value
 	G.Read(m.OutputNode, &m.OutputValue)
 	// Define loss function
-	m.TargetOutputNode = G.NewMatrix(m.Graph, G.Float64, G.WithShape(m.OutputNode.Shape()...))
+	m.TargetOutputNode = G.NewMatrix(m.Graph, m.DType, G.WithShape(m.OutputNode.Shape()...))
 	lossNode, err := buildParams.losses[0](m.OutputNode, m.TargetOutputNode)
 	if err != nil {
 		return err

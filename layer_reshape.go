@@ -12,7 +12,7 @@ type ReshapeLayer struct {
 
 func Reshape(model *Model, name string, newShape T.Shape) *ReshapeLayer {
 	return &ReshapeLayer{
-		LayerBase: LayerBase{model.Graph, name, false},
+		LayerBase: LayerBase{model.Graph, name, false, model.DType},
 		ToShape:   newShape,
 	}
 }

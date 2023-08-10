@@ -127,7 +127,7 @@ func MakeModel() *K.Model {
 	inputNodes, hiddenNodes, outputNodes := 2, 5, 1
 
 	// Create the empty model and a Namer to provide names to the layers
-	model := K.NewModel()
+	model := K.NewModel(T.Float64)
 	n := K.NewNamer("model")
 
 	// Create the input layer

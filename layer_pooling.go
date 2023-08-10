@@ -21,7 +21,7 @@ type MaxPooling2DLayer struct {
 // Input shape must be BCHW (batch, channels, height, width)
 func SimpleMaxPooling2D(m *Model, name string, poolSize int) *MaxPooling2DLayer {
 	l := &MaxPooling2DLayer{
-		LayerBase{m.Graph, name, false},
+		LayerBase{m.Graph, name, false, m.DType},
 		[]int{poolSize, poolSize},
 		[]int{poolSize, poolSize},
 		"same",
