@@ -41,7 +41,7 @@ outputs = K.Activation(model, n.Next(), "sigmoid").MustAttach(outputs)
 
 // Build the rest of the model so we can train it and run it
 // We are providing it with a mean squared error loss
-model.MustBuild(inputs, outputs, K.MSE)
+model.MustBuild(K.WithInputs(inputs), K.WithOutputs(outputs), K.WithLosses(K.MSE))
 ```
 
 ### Fitting the model
@@ -49,12 +49,12 @@ model.MustBuild(inputs, outputs, K.MSE)
 // Create an ADAM solver - this is the thing that actually updates the weights
 solver := G.NewAdamSolver(G.WithLearnRate(0.01))
 // Fit the model for 1k epochs
-model.Fit(x, y, solver, K.WithEpochs(1000), K.WithLoggingEvery(100))
+model.Fit(K.V(x), K.V(y), solver, K.WithEpochs(1000), K.WithLoggingEvery(100))
 ```
 
 ### Testing the model
 ```go
-yp, _ := model.PredictBatch(x)
+yp, _ := model.PredictBatch(K.V(x))
 fmt.Printf("\nPredictions (%s):\n", testName)
 for i := 0; i < x.Shape()[0]; i++ {
   sx, _ := x.Slice(T.S(i))
