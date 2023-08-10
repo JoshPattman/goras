@@ -2,7 +2,6 @@ package main
 
 import (
 	K "github.com/JoshPattman/goras"
-	G "gorgonia.org/gorgonia"
 	T "gorgonia.org/tensor"
 )
 
@@ -39,10 +38,7 @@ func MakeModel() *K.Model {
 	// Reshape and dropout
 	// There is no reshape in goras yet, so we will use the gorgonia one
 	b, c, h, w := outputs.Shape()[0], outputs.Shape()[1], outputs.Shape()[2], outputs.Shape()[3]
-	outputs, err := G.Reshape(outputs, T.Shape{b, c * h * w})
-	if err != nil {
-		panic(err)
-	}
+	outputs = K.Reshape(model, n.Next(), T.Shape{b, c * h * w}).MustAttach(outputs)
 	outputs = K.Dropout(model, n.Next(), 0.2).MustAttach(outputs)
 
 	// Dense net
@@ -56,7 +52,3 @@ func MakeModel() *K.Model {
 
 	return model
 }
-
-// 32, 64, 128
-// 625
-// 10
