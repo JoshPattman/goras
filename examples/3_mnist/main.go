@@ -23,11 +23,11 @@ func main() {
 	model := MakeModel()
 
 	solver := G.NewAdamSolver(G.WithLearnRate(0.001))
-	err = model.Fit(K.V(x.(*T.Dense)), K.V(y.(*T.Dense)), solver, K.WithVerbose(true), K.WithEpochs(5), K.WithLoggingEvery(5))
+	err = model.Fit(K.V(x.(*T.Dense)), K.V(y.(*T.Dense)), solver, K.WithClearLine(false), K.WithEpochs(3))
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Done")
+	fmt.Println("Done Training")
 }
 
 // This uses much of the same code from https://gorgonia.org/tutorials/mnist/

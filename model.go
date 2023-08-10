@@ -291,6 +291,9 @@ func (m *Model) Fit(xs, ys []*T.Dense, solver G.Solver, opts ...FitOpt) error {
 			fmt.Printf("%sEpoch %d/%d - Loss: %f                    ", lineStart, epoch+1, params.Epochs, loss/float64(xs[0].Shape()[0]))
 		}
 	}
+	if params.Verbose {
+		fmt.Println()
+	}
 	return nil
 }
 
