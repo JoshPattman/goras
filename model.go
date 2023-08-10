@@ -258,7 +258,7 @@ func WithVerbose(verbose bool) FitOpt { return func(p *fitParams) { p.Verbose = 
 // WithClearLine sets whether to clear the line when logging the loss.
 func WithClearLine(clear bool) FitOpt { return func(p *fitParams) { p.ClearLine = clear } }
 
-func (m *Model) Fit(x, y *T.Dense, solver G.Solver, opts ...FitOpt) error {
+func (m *Model) Fit(xs, ys []*T.Dense, solver G.Solver, opts ...FitOpt) error {
 	params := &fitParams{
 		Epochs:    1,
 		LogEvery:  1,
@@ -269,11 +269,12 @@ func (m *Model) Fit(x, y *T.Dense, solver G.Solver, opts ...FitOpt) error {
 		o(params)
 	}
 	batchSize := m.getCurrentBatchSize()
-	xBatches, yBatches := batchData(x, batchSize), batchData(y, batchSize)
+	// xBatchess and yBatchess are [batch][inputs]Tensor
+	xBatchess, yBatchess := batchMultiData(xs, batchSize), batchMultiData(ys, batchSize)
 	for epoch := 0; epoch < params.Epochs; epoch++ {
 		loss := 0.0
-		for bi := range xBatches {
-			batchLoss, err := m.FitBatch(V(xBatches[bi]), V(yBatches[bi]), solver)
+		for bi := range xBatchess {
+			batchLoss, err := m.FitBatch(xBatchess[bi], yBatchess[bi], solver)
 			if err != nil {
 				return err
 			}
@@ -284,7 +285,7 @@ func (m *Model) Fit(x, y *T.Dense, solver G.Solver, opts ...FitOpt) error {
 			if params.ClearLine {
 				lineStart = "\r"
 			}
-			fmt.Printf("%sEpoch %d/%d - Loss: %f                    ", lineStart, epoch+1, params.Epochs, loss/float64(x.Shape()[0]))
+			fmt.Printf("%sEpoch %d/%d - Loss: %f                    ", lineStart, epoch+1, params.Epochs, loss/float64(xs[0].Shape()[0]))
 		}
 	}
 	return nil
@@ -309,6 +310,31 @@ func batchData(d *T.Dense, batchSize int) []*T.Dense {
 			copy(denseData, slice.Data().([]float64))
 			denseSlice := T.New(T.WithShape(slice.Shape()...), T.WithBacking(denseData))
 			ret = append(ret, denseSlice)
+		}
+
+	}
+	return ret
+}
+
+// Creates a list of batches from the data. The data is a slice of tensors, representing multiple inputs. TODO - this copies the data, but i think it would be better to slice it.
+func batchMultiData(ds []*T.Dense, batchSize int) [][]*T.Dense {
+	var ret [][]*T.Dense
+	for i := 0; i < ds[0].Shape()[0]; i += batchSize {
+		if i+batchSize <= ds[0].Shape()[0] { // TODO - This ignores the remainder - it should do somthing else
+			// This is a full batch
+			var batch []*T.Dense
+			for _, d := range ds {
+				slice, err := d.Slice(T.S(i, i+batchSize))
+				if err != nil {
+					panic(err)
+				}
+				// Now we need to create a dense copy of the slice.
+				denseData := make([]float64, slice.Shape().TotalSize())
+				copy(denseData, slice.Data().([]float64))
+				denseSlice := T.New(T.WithShape(slice.Shape()...), T.WithBacking(denseData))
+				batch = append(batch, denseSlice)
+			}
+			ret = append(ret, batch)
 		}
 
 	}
