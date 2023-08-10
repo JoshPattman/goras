@@ -7,7 +7,6 @@ import (
 	"os"
 )
 
-const numLabels = 10
 const pixelRange = 255
 
 const (

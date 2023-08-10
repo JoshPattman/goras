@@ -64,10 +64,6 @@ func pixelWeight(px byte) float64 {
 	return retVal
 }
 
-func reversePixelWeight(px float64) byte {
-	return byte((pixelRange*px - pixelRange) / 0.9)
-}
-
 func prepareX(M []RawImage, dt tensor.Dtype) (retVal tensor.Tensor) {
 	rows := len(M)
 	cols := len(M[0])
@@ -75,7 +71,7 @@ func prepareX(M []RawImage, dt tensor.Dtype) (retVal tensor.Tensor) {
 	var backing interface{}
 	switch dt {
 	case tensor.Float64:
-		b := make([]float64, rows*cols, rows*cols)
+		b := make([]float64, rows*cols)
 		b = b[:0]
 		for i := 0; i < rows; i++ {
 			for j := 0; j < len(M[i]); j++ {
@@ -84,7 +80,7 @@ func prepareX(M []RawImage, dt tensor.Dtype) (retVal tensor.Tensor) {
 		}
 		backing = b
 	case tensor.Float32:
-		b := make([]float32, rows*cols, rows*cols)
+		b := make([]float32, rows*cols)
 		b = b[:0]
 		for i := 0; i < rows; i++ {
 			for j := 0; j < len(M[i]); j++ {
@@ -104,7 +100,7 @@ func prepareY(N []Label, dt tensor.Dtype) (retVal tensor.Tensor) {
 	var backing interface{}
 	switch dt {
 	case tensor.Float64:
-		b := make([]float64, rows*cols, rows*cols)
+		b := make([]float64, rows*cols)
 		b = b[:0]
 		for i := 0; i < rows; i++ {
 			for j := 0; j < 10; j++ {
@@ -117,7 +113,7 @@ func prepareY(N []Label, dt tensor.Dtype) (retVal tensor.Tensor) {
 		}
 		backing = b
 	case tensor.Float32:
-		b := make([]float32, rows*cols, rows*cols)
+		b := make([]float32, rows*cols)
 		b = b[:0]
 		for i := 0; i < rows; i++ {
 			for j := 0; j < 10; j++ {
