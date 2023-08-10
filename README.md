@@ -82,8 +82,6 @@ for i := 0; i < x.Shape()[0]; i++ {
   - `Deconvolution` - I think I will have to implement this in Gorgonia and pull request it first
   - `Upsampling` - I think I will have to implement this in Gorgonia and pull request it first
   - `Embedding`
-- Add these activations
-  - `leaky_relu`
 - Add `L1` and `L2` regularlization
 - Check if GPU support is working for cuda. I think it should work, but I havn't got round to testing yet.
 - Currently, batching for training and prediction discards the remainder of the last batch (eg batch size 8, 17 elements, will only predict 16 things and the last thing will be disacrded).
