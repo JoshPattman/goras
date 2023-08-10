@@ -14,11 +14,11 @@ func Dropout(m *Model, name string, dropoutProbability float64) *DropoutLayer {
 	m.AddLayer(d)
 	return d
 }
-func (d *DropoutLayer) Attach(n *G.Node) (*G.Node, error) {
-	return G.Dropout(n, d.DropoutProbability)
+func (l *DropoutLayer) Attach(n *G.Node) (*G.Node, error) {
+	return G.Dropout(n, l.DropoutProbability)
 }
-func (d *DropoutLayer) MustAttach(n *G.Node) *G.Node {
-	n, err := d.Attach(n)
+func (l *DropoutLayer) MustAttach(n *G.Node) *G.Node {
+	n, err := l.Attach(n)
 	if err != nil {
 		panic(err)
 	}
@@ -26,3 +26,5 @@ func (d *DropoutLayer) MustAttach(n *G.Node) *G.Node {
 }
 
 func (d *DropoutLayer) Parameters() map[string]*G.Node { return make(map[string]*G.Node) }
+
+func (d *DropoutLayer) Type() string { return "dropout" }

@@ -31,3 +31,5 @@ func (l *ReshapeLayer) MustAttach(n *G.Node) *G.Node {
 	}
 	return n
 }
+
+func (l *ReshapeLayer) Type() string { return "reshape" }

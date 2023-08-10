@@ -23,20 +23,20 @@ func Dense(m *Model, name string, nodes int) *DenseLayer {
 
 // Attach attaches the layer to a previous node.
 // It then returns the node that the layer outputs.
-func (d *DenseLayer) Attach(n *G.Node) (*G.Node, error) {
+func (l *DenseLayer) Attach(n *G.Node) (*G.Node, error) {
 	if err := validateShape(n.Shape(), valNDims(2)); err != nil {
 		return nil, err
 	}
 	numInputs := n.Shape()[1]
 	batchSize := n.Shape()[0]
-	d.Weights = G.NewMatrix(d.Graph, G.Float64, G.WithShape(numInputs+1, d.Nodes), G.WithInit(G.GlorotN(1.0)))
+	l.Weights = G.NewMatrix(l.Graph, G.Float64, G.WithShape(numInputs+1, l.Nodes), G.WithInit(G.GlorotN(1.0)))
 	bias := G.NewConstant(T.Ones(T.Float64, batchSize, 1))
 	// Build the graph
 	withBias, err := G.Concat(1, n, bias)
 	if err != nil {
 		return nil, err
 	}
-	multiplied, err := G.Mul(withBias, d.Weights)
+	multiplied, err := G.Mul(withBias, l.Weights)
 	if err != nil {
 		return nil, err
 	}
@@ -46,8 +46,8 @@ func (d *DenseLayer) Attach(n *G.Node) (*G.Node, error) {
 // Attach attaches the layer to a previous node.
 // It then returns the node that the layer outputs.
 // Panics if there is an error.
-func (d *DenseLayer) MustAttach(n *G.Node) *G.Node {
-	n, err := d.Attach(n)
+func (l *DenseLayer) MustAttach(n *G.Node) *G.Node {
+	n, err := l.Attach(n)
 	if err != nil {
 		panic(err)
 	}
@@ -55,6 +55,8 @@ func (d *DenseLayer) MustAttach(n *G.Node) *G.Node {
 }
 
 // Parameters returns a map of the parameters of the layer.
-func (d *DenseLayer) Parameters() map[string]*G.Node {
-	return map[string]*G.Node{"weights": d.Weights}
+func (l *DenseLayer) Parameters() map[string]*G.Node {
+	return map[string]*G.Node{"weights": l.Weights}
 }
+
+func (l *DenseLayer) Type() string { return "dense" }

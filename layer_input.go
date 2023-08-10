@@ -22,4 +22,6 @@ func Input(m *Model, name string, shape ...int) *InputLayer {
 }
 
 // Parameters returns a map of the parameters of the layer.
-func (i *InputLayer) Parameters() map[string]*G.Node { return make(map[string]*G.Node) }
+func (l *InputLayer) Parameters() map[string]*G.Node { return make(map[string]*G.Node) }
+
+func (l *InputLayer) Type() string { return "input" }

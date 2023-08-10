@@ -6,9 +6,10 @@ import (
 
 // Layer is an interface that all layers must implement to be able to be added to a model.
 type Layer interface {
-	Parameters() map[string]*G.Node
-	Name() string
-	Trainable() bool
+	Parameters() map[string]*G.Node // This returns a map of the parameters. E.g. {"weights":[...], "biases":[...]}
+	Name() string                   // This returns a name unique to this layer in the model
+	Trainable() bool                // This specifies whether the layer is updated during Fit()
+	Type() string                   // This is used for Summary()
 }
 
 // LayerBase is a struct that all layers should embed.

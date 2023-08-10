@@ -22,8 +22,8 @@ func Activation(m *Model, name string, activation string) *ActivationLayer {
 
 // Attach attaches the layer to a previous node.
 // It then returns the node that the layer outputs.
-func (a *ActivationLayer) Attach(n *G.Node) (*G.Node, error) {
-	switch a.Activation {
+func (l *ActivationLayer) Attach(n *G.Node) (*G.Node, error) {
+	switch l.Activation {
 	case "sigmoid":
 		return G.Sigmoid(n)
 	case "relu":
@@ -35,12 +35,12 @@ func (a *ActivationLayer) Attach(n *G.Node) (*G.Node, error) {
 	case "softmax":
 		return G.SoftMax(n, 1)
 	default:
-		return nil, fmt.Errorf("invalid activation '%s'", a.Activation)
+		return nil, fmt.Errorf("invalid activation '%s'", l.Activation)
 	}
 }
 
-func (a *ActivationLayer) MustAttach(n *G.Node) *G.Node {
-	n, err := a.Attach(n)
+func (l *ActivationLayer) MustAttach(n *G.Node) *G.Node {
+	n, err := l.Attach(n)
 	if err != nil {
 		panic(err)
 	}
@@ -48,7 +48,7 @@ func (a *ActivationLayer) MustAttach(n *G.Node) *G.Node {
 }
 
 // Parameters returns a map of the parameters of the layer.
-func (a *ActivationLayer) Parameters() map[string]*G.Node { return make(map[string]*G.Node) }
+func (l *ActivationLayer) Parameters() map[string]*G.Node { return make(map[string]*G.Node) }
 
 func IsValidActivation(ac string) bool {
 	switch ac {
@@ -58,3 +58,5 @@ func IsValidActivation(ac string) bool {
 		return false
 	}
 }
+
+func (l *ActivationLayer) Type() string { return "activation" }

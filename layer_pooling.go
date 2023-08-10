@@ -62,3 +62,5 @@ func calculateSamePadding(width, filterSize, stride int) []int {
 	padRight := padAlongWidth - padLeft
 	return []int{padLeft, padRight}
 }
+
+func (l *MaxPooling2DLayer) Type() string { return "maxpool2d" }

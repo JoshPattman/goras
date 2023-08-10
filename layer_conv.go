@@ -54,3 +54,5 @@ func (l *Conv2DLayer) MustAttach(n *G.Node) *G.Node {
 func (l *Conv2DLayer) Parameters() map[string]*G.Node {
 	return map[string]*G.Node{"kernels": l.Kernels}
 }
+
+func (l *Conv2DLayer) Type() string { return "conv2d" }
