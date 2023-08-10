@@ -85,3 +85,4 @@ for i := 0; i < x.Shape()[0]; i++ {
 - Better checking for correct shapes of tensors
 - Wherever possible, use T.Tensor instead of what is currently used, which is *T.Dense
 - Allow the user to choose the data type for the model to use
+- Test and fix softmax and/or CCE
