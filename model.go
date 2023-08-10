@@ -185,8 +185,15 @@ func (m *Model) BindParamsFrom(m1 *Model) error {
 	return nil
 }
 
+// V is a helper function to create a slice of tensors. It should be used when providing a model with input and target data.
+func V(ts ...*T.Dense) []*T.Dense { return ts }
+
 // PredictBatch runs the model on a batch of input data. The batch size must match the input node shape.
-func (m *Model) PredictBatch(input *T.Dense) (*T.Dense, error) {
+func (m *Model) PredictBatch(inputs []*T.Dense) (*T.Dense, error) {
+	if len(inputs) != 1 {
+		return nil, fmt.Errorf("number of inputs must be 1 at this time")
+	}
+	input := inputs[0]
 	if err := ensureCorrectBatchSize(input, m.getCurrentBatchSize()); err != nil {
 		return nil, err
 	}
@@ -206,7 +213,11 @@ func (m *Model) PredictBatch(input *T.Dense) (*T.Dense, error) {
 // FitBatch runs the model on a batch of input data, and then trains the model on the target data.
 // The solver used is passed in as an argument.
 // IMPORTANT NOTE: Currently, when the data is batched, the last batch of data will be discarded if the x size does not evenly divide the batch size.
-func (m *Model) FitBatch(input, target *T.Dense, solver G.Solver) (float64, error) {
+func (m *Model) FitBatch(inputs, targets []*T.Dense, solver G.Solver) (float64, error) {
+	if len(inputs) != 1 || len(targets) != 1 {
+		return 0, fmt.Errorf("number of inputs and targets must be 1 at this time")
+	}
+	input, target := inputs[0], targets[0]
 	if err := ensureCorrectBatchSize(input, m.getCurrentBatchSize()); err != nil {
 		return 0, err
 	}
@@ -262,7 +273,7 @@ func (m *Model) Fit(x, y *T.Dense, solver G.Solver, opts ...FitOpt) error {
 	for epoch := 0; epoch < params.Epochs; epoch++ {
 		loss := 0.0
 		for bi := range xBatches {
-			batchLoss, err := m.FitBatch(xBatches[bi], yBatches[bi], solver)
+			batchLoss, err := m.FitBatch(V(xBatches[bi]), V(yBatches[bi]), solver)
 			if err != nil {
 				return err
 			}

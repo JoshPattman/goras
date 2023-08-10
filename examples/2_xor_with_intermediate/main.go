@@ -52,7 +52,7 @@ func main() {
 	// Also this time we are using fitBatch instead of fit just to show you can do it either way.
 	solver := G.NewAdamSolver(G.WithLearnRate(0.01))
 	for epoch := 0; epoch <= 1000; epoch++ {
-		loss, _ := modelFull.FitBatch(x, y, solver)
+		loss, _ := modelFull.FitBatch(K.V(x), K.V(y), solver)
 		if epoch%100 == 0 {
 			fmt.Printf("Epoch: %-4v Loss %.4f\n", fmt.Sprint(epoch), loss)
 		}
@@ -153,7 +153,7 @@ func MakeModel(isJustForEncoding bool) *K.Model {
 
 // Function to run a model and print some values to the terminal
 func TestModel(model *K.Model, x, y *T.Dense, testName string) {
-	yp, _ := model.PredictBatch(x)
+	yp, _ := model.PredictBatch(K.V(x))
 	fmt.Printf("\nPredictions (%s):\n", testName)
 	for i := 0; i < x.Shape()[0]; i++ {
 		sx, _ := x.Slice(T.S(i))
