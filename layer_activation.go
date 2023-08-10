@@ -10,14 +10,43 @@ import (
 //   - Input/Output Shape: any shape
 type ActivationLayer struct {
 	LayerBase
-	Activation string
+	Activation    string
+	LeakyReluGrad float64
 }
 
 // Activation creates a new ActivationLayer on the Model with the given activation function.
 // The activation function can be one of ["sigmoid", "relu", "tanh", "binary", "softmax", "leakyrelu"].
 func Activation(m *Model, name string, activation string) *ActivationLayer {
-	a := &ActivationLayer{LayerBase{m.Graph, name, false, m.DType}, activation}
+	a := &ActivationLayer{LayerBase{m.Graph, name, false, m.DType}, activation, 0.01}
 	m.AddLayer(a)
+	return a
+}
+
+func Sigmoid(m *Model, name string) *ActivationLayer {
+	return Activation(m, name, "sigmoid")
+}
+
+func Relu(m *Model, name string) *ActivationLayer {
+	return Activation(m, name, "relu")
+}
+
+func Tanh(m *Model, name string) *ActivationLayer {
+	return Activation(m, name, "tanh")
+}
+
+func Binary(m *Model, name string) *ActivationLayer {
+	return Activation(m, name, "binary")
+}
+
+func Softmax(m *Model, name string) *ActivationLayer {
+	return Activation(m, name, "softmax")
+}
+
+func LeakyRelu(m *Model, name string, grad ...float64) *ActivationLayer {
+	a := Activation(m, name, "leakyrelu")
+	if len(grad) > 0 {
+		a.LeakyReluGrad = grad[0]
+	}
 	return a
 }
 
