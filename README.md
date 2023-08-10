@@ -78,5 +78,6 @@ for i := 0; i < x.Shape()[0]; i++ {
 - Add these activations
   - `leaky_relu`
 - Add `L1` and `L2` regularlization
-- Add a `Predict` method to `Model` that splits the input into batches
 - Check if GPU support is working for cuda. I think it should work, but I havn't got round to testing yet.
+- Currently, batching for training and prediction discards the remainder of the last batch (eg batch size 8, 17 elements, will only predict 16 things and the last thing will be disacrded).
+  - I will fix this once I hear back on an issue https://github.com/gorgonia/gorgonia/issues/204

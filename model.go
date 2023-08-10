@@ -153,6 +153,9 @@ func (m *Model) BindParamsFrom(m1 *Model) error {
 
 // PredictBatch runs the model on a batch of input data. The batch size must match the input node shape.
 func (m *Model) PredictBatch(input *T.Dense) (*T.Dense, error) {
+	if err := ensureCorrectBatchSize(input, m.getCurrentBatchSize()); err != nil {
+		return nil, err
+	}
 	m.Machine.Reset()
 	if err := G.Let(m.InputNode, input); err != nil {
 		return nil, err
@@ -170,6 +173,9 @@ func (m *Model) PredictBatch(input *T.Dense) (*T.Dense, error) {
 // The solver used is passed in as an argument.
 // IMPORTANT NOTE: Currently, when the data is batched, the last batch of data will be discarded if the x size does not evenly divide the batch size.
 func (m *Model) FitBatch(input, target *T.Dense, solver G.Solver) (float64, error) {
+	if err := ensureCorrectBatchSize(input, m.getCurrentBatchSize()); err != nil {
+		return 0, err
+	}
 	m.Machine.Reset()
 	if err := G.Let(m.InputNode, input); err != nil {
 		return 0, err
@@ -184,27 +190,6 @@ func (m *Model) FitBatch(input, target *T.Dense, solver G.Solver) (float64, erro
 		return 0, err
 	}
 	return m.LossValue.Data().(float64), nil
-}
-
-// Creates a list of batches from the data. TODO - this copies the data, but i think it would be better to slice it.
-func batchData(d *T.Dense, batchSize int) []*T.Dense {
-	var ret []*T.Dense
-	for i := 0; i < d.Shape()[0]; i += batchSize {
-		if i+batchSize <= d.Shape()[0] {
-			// This is a full batch
-			slice, err := d.Slice(T.S(i, i+batchSize))
-			if err != nil {
-				panic(err)
-			}
-			// Now we need to create a dense copy of the slice.
-			denseData := make([]float64, slice.Shape().TotalSize())
-			copy(denseData, slice.Data().([]float64))
-			denseSlice := T.New(T.WithShape(slice.Shape()...), T.WithBacking(denseData))
-			ret = append(ret, denseSlice)
-		}
-
-	}
-	return ret
 }
 
 type FitOpt func(*fitParams)
@@ -238,7 +223,7 @@ func (m *Model) Fit(x, y *T.Dense, solver G.Solver, opts ...FitOpt) error {
 	for _, o := range opts {
 		o(params)
 	}
-	batchSize := x.Shape()[0]
+	batchSize := m.getCurrentBatchSize()
 	xBatches, yBatches := batchData(x, batchSize), batchData(y, batchSize)
 	for epoch := 0; epoch < params.Epochs; epoch++ {
 		loss := 0.0
@@ -256,6 +241,38 @@ func (m *Model) Fit(x, y *T.Dense, solver G.Solver, opts ...FitOpt) error {
 			}
 			fmt.Printf("%sEpoch %d/%d - Loss: %f                    ", lineStart, epoch+1, params.Epochs, loss/float64(x.Shape()[0]))
 		}
+	}
+	return nil
+}
+
+func (m *Model) getCurrentBatchSize() int {
+	return m.InputNode.Shape()[0]
+}
+
+// Creates a list of batches from the data. TODO - this copies the data, but i think it would be better to slice it.
+func batchData(d *T.Dense, batchSize int) []*T.Dense {
+	var ret []*T.Dense
+	for i := 0; i < d.Shape()[0]; i += batchSize {
+		if i+batchSize <= d.Shape()[0] {
+			// This is a full batch
+			slice, err := d.Slice(T.S(i, i+batchSize))
+			if err != nil {
+				panic(err)
+			}
+			// Now we need to create a dense copy of the slice.
+			denseData := make([]float64, slice.Shape().TotalSize())
+			copy(denseData, slice.Data().([]float64))
+			denseSlice := T.New(T.WithShape(slice.Shape()...), T.WithBacking(denseData))
+			ret = append(ret, denseSlice)
+		}
+
+	}
+	return ret
+}
+
+func ensureCorrectBatchSize(batchData *T.Dense, batchSize int) error {
+	if batchData.Shape()[0] != batchSize {
+		return fmt.Errorf("incorrect batch size - expected %d, got %d", batchSize, batchData.Shape()[0])
 	}
 	return nil
 }
