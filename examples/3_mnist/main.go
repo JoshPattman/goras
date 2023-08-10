@@ -5,13 +5,14 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	K "github.com/JoshPattman/goras"
 	G "gorgonia.org/gorgonia"
 	T "gorgonia.org/tensor"
 )
 
-// We will define a dtype. Float32 in theory should be faster.
+// We will define a dtype. Float32 in theory should be faster but I haven't seen much difference. It should also occupy less memory though.
 var dType = T.Float32
 
 func main() {
@@ -44,11 +45,12 @@ func main() {
 
 	// Fit the model. You only need about 3 epochs as mnist is quite simple.
 	// We also specify not to clear the line, which means we can see the progress.
+	fitStart := time.Now()
 	err = model.Fit(K.V(x), K.V(y), solver, K.WithClearLine(false), K.WithEpochs(3))
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Done Training")
+	fmt.Printf("Done Training. It took %v\n", time.Since(fitStart))
 
 	/* OUTPUT:
 	Epoch 1/3 - Loss: 0.001303
