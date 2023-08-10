@@ -18,6 +18,9 @@ func Reshape(model *Model, name string, newShape T.Shape) *ReshapeLayer {
 }
 
 func (l *ReshapeLayer) Attach(n *G.Node) (*G.Node, error) {
+	if err := validateShape(n.Shape(), valMatchingVolume(l.ToShape)); err != nil {
+		return nil, err
+	}
 	return G.Reshape(n, l.ToShape)
 }
 

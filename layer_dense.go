@@ -24,8 +24,8 @@ func Dense(m *Model, name string, nodes int) *DenseLayer {
 // Attach attaches the layer to a previous node.
 // It then returns the node that the layer outputs.
 func (d *DenseLayer) Attach(n *G.Node) (*G.Node, error) {
-	if d.Weights != nil {
-		panic("Already attached")
+	if err := validateShape(n.Shape(), valNDims(2)); err != nil {
+		return nil, err
 	}
 	numInputs := n.Shape()[1]
 	batchSize := n.Shape()[0]

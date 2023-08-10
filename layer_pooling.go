@@ -31,6 +31,9 @@ func SimpleMaxPooling2D(m *Model, name string, poolSize int) *MaxPooling2DLayer 
 }
 
 func (l *MaxPooling2DLayer) Attach(x *G.Node) (*G.Node, error) {
+	if err := validateShape(x.Shape(), valNDims(4)); err != nil {
+		return nil, err
+	}
 	pad := []int{0, 0} // padding=valid
 	if l.Padding == "same" {
 		padH := calculateSamePadding(x.Shape()[2], l.PoolSize[0], l.Stride[0])

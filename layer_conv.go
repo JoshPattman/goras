@@ -27,6 +27,9 @@ func SimpleConv2D(m *Model, name string, kernelSize int, numKernels int) *Conv2D
 }
 
 func (l *Conv2DLayer) Attach(x *G.Node) (*G.Node, error) {
+	if err := validateShape(x.Shape(), valNDims(4)); err != nil {
+		return nil, err
+	}
 	pad := []int{0, 0} // padding=valid
 	if l.Padding == "same" {
 		pad = []int{l.KernelSize[0] / 2, l.KernelSize[1] / 2}
