@@ -65,7 +65,8 @@ for i := 0; i < x.Shape()[0]; i++ {
 ```
 
 ## Todo
-- Figure out how to allow models to have multiple inputs and outputs
+- Figure out how to allow models to have multiple outputs
+  - I think just creating loss nodes for each then summing those nodes for a total loss is the way to go
 - Add these layers
   - `Recurrent`
   - `LSTM`

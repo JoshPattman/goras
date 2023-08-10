@@ -67,8 +67,8 @@ func (m *Model) Build(opts ...BuildOpts) error {
 		return fmt.Errorf("outputNodes and losses must be the same length")
 	}
 	// For now, until i figure out multiple inputs and outputs, ensure there is examtly one input and output
-	if len(buildParams.inputNodes) != 1 || len(buildParams.outputNodes) != 1 {
-		return fmt.Errorf("only one input and output is supported at this time, this will change soon")
+	if len(buildParams.outputNodes) != 1 {
+		return fmt.Errorf("only one output is supported at this time, this will change soon")
 	}
 
 	// Store input and output nodes
