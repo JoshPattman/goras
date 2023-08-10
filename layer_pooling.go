@@ -30,6 +30,19 @@ func SimpleMaxPooling2D(m *Model, name string, poolSize int) *MaxPooling2DLayer 
 	return l
 }
 
+// MaxPooling2D creates a new max pooling layer on the specified model.
+// Padding can be either "same" or "valid".
+func MaxPooling2D(m *Model, name string, poolSize, stride []int, padding string) *MaxPooling2DLayer {
+	l := &MaxPooling2DLayer{
+		LayerBase{m.Graph, name, false, m.DType},
+		poolSize,
+		stride,
+		padding,
+	}
+	m.AddLayer(l)
+	return l
+}
+
 func (l *MaxPooling2DLayer) Attach(x *G.Node) (*G.Node, error) {
 	if err := validateShape(x.Shape(), valNDims(4)); err != nil {
 		return nil, err
