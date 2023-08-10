@@ -23,11 +23,41 @@ func main() {
 	model := MakeModel()
 
 	solver := G.NewAdamSolver(G.WithLearnRate(0.001))
-	err = model.Fit(K.V(x.(*T.Dense)), K.V(y.(*T.Dense)), solver, K.WithClearLine(false), K.WithEpochs(3))
+	err = model.Fit(K.V(x), K.V(y), solver, K.WithClearLine(false), K.WithEpochs(3))
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("Done Training")
+
+	fmt.Println("\nPredictions:")
+
+	xB, _ := x.Slice(T.S(0, 16))
+	yB, _ := y.Slice(T.S(0, 16))
+	yBP, err := model.PredictBatch(K.V(xB))
+	if err != nil {
+		log.Fatal(err)
+	}
+	for i := 0; i < 16; i++ {
+		yp, err := yBP.Slice(T.S(i))
+		if err != nil {
+			log.Fatal(err)
+		}
+		yb, err := yB.Slice(T.S(i))
+		if err != nil {
+			log.Fatal(err)
+		}
+		predicted, err := T.Argmax(yp, 0)
+		if err != nil {
+			log.Fatal(err)
+		}
+		actual, err := T.Argmax(yb, 0)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("\tPrediction:", predicted)
+		fmt.Println("\tActual:", actual)
+		fmt.Println()
+	}
 }
 
 // This uses much of the same code from https://gorgonia.org/tutorials/mnist/
@@ -66,9 +96,9 @@ func MakeModel() *K.Model {
 	outputs = K.Activation(model, n.Next(), "relu").MustAttach(outputs)
 	outputs = K.Dropout(model, n.Next(), 0.55).MustAttach(outputs)
 	outputs = K.Dense(model, n.Next(), 10).MustAttach(outputs)
-	outputs = K.Activation(model, n.Next(), "softmax").MustAttach(outputs)
+	outputs = K.Activation(model, n.Next(), "sigmoid").MustAttach(outputs)
 
-	model.MustBuild(K.WithInputs(inputs), K.WithOutputs(outputs), K.WithLosses(K.CCE))
+	model.MustBuild(K.WithInputs(inputs), K.WithOutputs(outputs), K.WithLosses(K.MSE))
 
 	return model
 }
