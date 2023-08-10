@@ -79,8 +79,8 @@ for i := 0; i < x.Shape()[0]; i++ {
   - `LSTM`
   - `Convolution` - Simple implentation already
   - `Pooling` - Simple implentation already
-  - `Deconvolution`
-  - `Upsampling`
+  - `Deconvolution` - I think I will have to implement this in Gorgonia and pull request it first
+  - `Upsampling` - I think I will have to implement this in Gorgonia and pull request it first
   - `Embedding`
 - Add these activations
   - `leaky_relu`
