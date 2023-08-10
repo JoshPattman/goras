@@ -6,6 +6,13 @@ I am trying to design _Goras_ to have a similar workflow to the _Keras_ function
 ## Stability
 This is very much an unstable package. I am still trying to figure out how everything fits together best, so I will likely change function declarations and types quite a bit. That being said, the package is currently in a usable state, but just remember to tag onto a specific version.
 
+## Features
+- Similar workflow to Keras functional API
+- Easy to build complex models with custom components
+- Supports multiple model inputs and soon will support multiple model outputs
+- Provides easy model saving and loading
+- Supports many types of layers including Dense, Convolution2D, and MaxPooling2D
+  - I plan to add support for LSTM and MHA layers in the future
 ## Examples
 See the examples directory for some full examples. More coming soon! Alternatively, below is an overview of how the package works:
 
