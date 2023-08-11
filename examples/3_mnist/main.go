@@ -147,35 +147,35 @@ func MakeModel() *K.Model {
 	n := K.NewNamer("model")
 
 	// Input shape is (batch_size, channels(this is one for b&w), img_x, img_y)
-	inputs := K.Input(model, n.Next(), batchSize, 1, 28, 28).Node()
+	inputs := K.Input(model, n(), batchSize, 1, 28, 28).Node()
 
 	// Convolution and pooling blocks
-	outputs := K.SimpleConv2D(model, n.Next(), 3, 16).MustAttach(inputs)
-	outputs = K.Activation(model, n.Next(), "relu").MustAttach(outputs)
-	outputs = K.SimpleMaxPooling2D(model, n.Next(), 2).MustAttach(outputs)
-	outputs = K.Dropout(model, n.Next(), 0.2).MustAttach(outputs)
+	outputs := K.SimpleConv2D(model, n(), 3, 16).MustAttach(inputs)
+	outputs = K.Activation(model, n(), "relu").MustAttach(outputs)
+	outputs = K.SimpleMaxPooling2D(model, n(), 2).MustAttach(outputs)
+	outputs = K.Dropout(model, n(), 0.2).MustAttach(outputs)
 
-	outputs = K.SimpleConv2D(model, n.Next(), 3, 32).MustAttach(outputs)
-	outputs = K.Activation(model, n.Next(), "relu").MustAttach(outputs)
-	outputs = K.SimpleMaxPooling2D(model, n.Next(), 2).MustAttach(outputs)
-	outputs = K.Dropout(model, n.Next(), 0.2).MustAttach(outputs)
+	outputs = K.SimpleConv2D(model, n(), 3, 32).MustAttach(outputs)
+	outputs = K.Activation(model, n(), "relu").MustAttach(outputs)
+	outputs = K.SimpleMaxPooling2D(model, n(), 2).MustAttach(outputs)
+	outputs = K.Dropout(model, n(), 0.2).MustAttach(outputs)
 
-	outputs = K.SimpleConv2D(model, n.Next(), 3, 32).MustAttach(outputs)
-	outputs = K.Activation(model, n.Next(), "relu").MustAttach(outputs)
-	outputs = K.SimpleMaxPooling2D(model, n.Next(), 2).MustAttach(outputs)
+	outputs = K.SimpleConv2D(model, n(), 3, 32).MustAttach(outputs)
+	outputs = K.Activation(model, n(), "relu").MustAttach(outputs)
+	outputs = K.SimpleMaxPooling2D(model, n(), 2).MustAttach(outputs)
 
 	// Reshape and dropout
 	b, c, h, w := outputs.Shape()[0], outputs.Shape()[1], outputs.Shape()[2], outputs.Shape()[3]
-	outputs = K.Reshape(model, n.Next(), T.Shape{b, c * h * w}).MustAttach(outputs)
-	outputs = K.Dropout(model, n.Next(), 0.2).MustAttach(outputs)
+	outputs = K.Reshape(model, n(), T.Shape{b, c * h * w}).MustAttach(outputs)
+	outputs = K.Dropout(model, n(), 0.2).MustAttach(outputs)
 
 	// Dense layers
-	outputs = K.Dense(model, n.Next(), 64).MustAttach(outputs)
-	outputs = K.Activation(model, n.Next(), "relu").MustAttach(outputs)
-	outputs = K.Dropout(model, n.Next(), 0.55).MustAttach(outputs)
-	outputs = K.Dense(model, n.Next(), 10).MustAttach(outputs)
+	outputs = K.Dense(model, n(), 64).MustAttach(outputs)
+	outputs = K.Activation(model, n(), "relu").MustAttach(outputs)
+	outputs = K.Dropout(model, n(), 0.55).MustAttach(outputs)
+	outputs = K.Dense(model, n(), 10).MustAttach(outputs)
 	// For now we are using sigmoid as the activation. Softmax would be better but I think at the moment it is broken.
-	outputs = K.Activation(model, n.Next(), "sigmoid").MustAttach(outputs)
+	outputs = K.Activation(model, n(), "sigmoid").MustAttach(outputs)
 
 	// Build the model
 	// Again, we are using MSE as the loss function. CCE would be better if we were using softmax.

@@ -33,18 +33,18 @@ batchSize := 4
 inputNodes, hiddenNodes, outputNodes := 2, 5, 1
 
 // Create the empty model and a Namer to provide names to the layers
-model := K.NewModel()
+model := K.NewModel(T.Float64)
 n := K.NewNamer("model")
 
 // Create the input layer
-inputs := K.Input(model, n.Next(), batchSize, inputNodes).Node
+inputs := K.Input(model, n(), batchSize, inputNodes).Node()
 // Create the first Dense layer and its activation.
 // Note that dense layers do not have an activation themselves, so you have to add one manually after
-outputs := K.Dense(model, n.Next(), hiddenNodes).MustAttach(inputs)
-outputs = K.Activation(model, n.Next(), "sigmoid").MustAttach(outputs)
+outputs := K.Dense(model, n(), hiddenNodes).MustAttach(inputs)
+outputs = K.Activation(model, n(), "sigmoid").MustAttach(outputs)
 // Create the second Dense layer
-outputs = K.Dense(model, n.Next(), outputNodes).MustAttach(outputs)
-outputs = K.Activation(model, n.Next(), "sigmoid").MustAttach(outputs)
+outputs = K.Dense(model, n(), outputNodes).MustAttach(outputs)
+outputs = K.Activation(model, n(), "sigmoid").MustAttach(outputs)
 
 // Build the rest of the model so we can train it and run it
 // We are providing it with a mean squared error loss
@@ -60,15 +60,21 @@ model.Fit(K.V(x), K.V(y), solver, K.WithEpochs(1000), K.WithLoggingEvery(100))
 ```
 
 ### Testing the model
+Note that Goras models can have multiple outputs, but as in this case we only have one output, we are using `[0]`
 ```go
-yp, _ := model.PredictBatch(K.V(x))
+yps, err := model.Predict(K.V(x))
+if err != nil {
+  panic(err)
+}
+yp := yps[0]
 fmt.Printf("\nPredictions (%s):\n", testName)
-for i := 0; i < x.Shape()[0]; i++ {
+for i := 0; i < yp.Shape()[0]; i++ {
   sx, _ := x.Slice(T.S(i))
   sy, _ := y.Slice(T.S(i))
   syp, _ := yp.Slice(T.S(i))
   fmt.Printf("X=%v Y=%v YP=%.3f\n", sx, sy, syp)
 }
+fmt.Println()
 ```
 
 ## Todo
@@ -84,8 +90,8 @@ for i := 0; i < x.Shape()[0]; i++ {
   - `Embedding`
 - Add `L1` and `L2` regularlization
 - Check if GPU support is working for cuda. I think it should work, but I havn't got round to testing yet.
-- Currently, batching for training and prediction discards the remainder of the last batch (eg batch size 8, 17 elements, will only predict 16 things and the last thing will be disacrded).
+- Currently, batching for training discards the remainder of the last batch (eg batch size 8, 17 elements, will only fit 16 things and the last thing will be discarded).
   - I will fix this once I hear back on an issue https://github.com/gorgonia/gorgonia/issues/204
-  - I also still need to add zero padding for prediction
+  - Batching for prediction zero pads but this is a bit wasteful
 - Test and fix softmax and/or CCE
 - Add callbacks for `Fit`

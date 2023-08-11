@@ -115,8 +115,8 @@ func encoder(model *K.Model, inputs *G.Node) *G.Node {
 	// As we are using two networks with different topologies, let's give differnt sections different names.
 	// This is mandatory, as it allows a half network to always have the same layers have the same names as a full network.
 	n := K.NewNamer("encoder")
-	outputs := K.Dense(model, n.Next(), 5).MustAttach(inputs)
-	outputs = K.Activation(model, n.Next(), "sigmoid").MustAttach(outputs)
+	outputs := K.Dense(model, n(), 5).MustAttach(inputs)
+	outputs = K.Activation(model, n(), "sigmoid").MustAttach(outputs)
 	return outputs
 }
 
@@ -124,8 +124,8 @@ func decoder(model *K.Model, inputs *G.Node) *G.Node {
 	// As we are using two networks with different topologies, let's give differnt sections different names.
 	// This is mandatory, as it allows a half network to always have the same layers have the same names as a full network.
 	n := K.NewNamer("decoder")
-	outputs := K.Dense(model, n.Next(), 1).MustAttach(inputs)
-	outputs = K.Activation(model, n.Next(), "sigmoid").MustAttach(outputs)
+	outputs := K.Dense(model, n(), 1).MustAttach(inputs)
+	outputs = K.Activation(model, n(), "sigmoid").MustAttach(outputs)
 	return outputs
 }
 
@@ -136,7 +136,7 @@ func MakeModel(isJustForEncoding bool) *K.Model {
 	n := K.NewNamer("model")
 
 	// Create the input layer
-	inputs := K.Input(model, n.Next(), 4, 2).Node()
+	inputs := K.Input(model, n(), 4, 2).Node()
 	// Add the encoder. This is the first layer
 	outputs := encoder(model, inputs)
 	// If we want to, also add the decoder. This is the second layer
