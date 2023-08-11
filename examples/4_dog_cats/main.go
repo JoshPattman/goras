@@ -1,6 +1,7 @@
 package main
 
-// YOU NEED TO UNZIP THE dataset.zimp FILE FIRST
+// YOU NEED TO UNZIP THE dataset.zip FILE FIRST.
+// GET THIS FILE FROM https://drive.google.com/file/d/1ML0qzboqLncaE_NBz9-ECXffpwWC4Fkx/view?usp=sharing
 
 import (
 	"fmt"
