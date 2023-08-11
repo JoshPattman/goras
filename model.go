@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"io"
+	"strings"
 
 	G "gorgonia.org/gorgonia"
 	T "gorgonia.org/tensor"
@@ -275,7 +276,7 @@ func (m *Model) Fit(xs, ys []T.Tensor, solver G.Solver, opts ...FitOpt) error {
 		Epochs:    1,
 		LogEvery:  1,
 		Verbose:   true,
-		ClearLine: true,
+		ClearLine: false,
 	}
 	for _, o := range opts {
 		o(params)
@@ -291,20 +292,33 @@ func (m *Model) Fit(xs, ys []T.Tensor, solver G.Solver, opts ...FitOpt) error {
 		return err
 	}
 	for epoch := 0; epoch < params.Epochs; epoch++ {
+		isLoggingEpoch := ((epoch%params.LogEvery == 0) || (epoch == params.Epochs-1))
+		logEveryBatch := len(xBatchess) / 100
+		if logEveryBatch == 0 {
+			logEveryBatch = 1
+		}
 		loss := 0.0
+		numBatches := 0.0
 		for bi := range xBatchess {
 			batchLoss, err := m.FitBatch(xBatchess[bi], yBatchess[bi], solver)
 			if err != nil {
 				return err
 			}
 			loss += batchLoss
-		}
-		if params.Verbose && ((epoch%params.LogEvery == 0) || (epoch == params.Epochs-1)) {
-			lineStart := "\n"
-			if params.ClearLine {
-				lineStart = "\r"
+			numBatches++
+			if params.Verbose && isLoggingEpoch && bi%logEveryBatch == 0 {
+				bar := strings.Repeat("=", int(numBatches/float64(len(xBatchess))*39))
+				bar += ">"
+				fmt.Printf("\rEpoch %d/%d - Loss: %f |%-40v|", epoch+1, params.Epochs, loss/numBatches, bar)
 			}
-			fmt.Printf("%sEpoch %d/%d - Loss: %f                    ", lineStart, epoch+1, params.Epochs, loss/float64(xs[0].Shape()[0]))
+
+		}
+		if params.Verbose && isLoggingEpoch {
+			lineEnd := "\n"
+			if params.ClearLine {
+				lineEnd = "\r"
+			}
+			fmt.Printf("\rEpoch %d/%d - Loss: %f |Done| %40v%v", epoch+1, params.Epochs, loss/numBatches, "", lineEnd)
 		}
 	}
 	if params.Verbose {

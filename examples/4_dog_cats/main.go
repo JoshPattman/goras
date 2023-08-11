@@ -63,7 +63,7 @@ func main() {
 	fmt.Println(model.Summary())
 
 	solver := G.NewAdamSolver(G.WithLearnRate(0.001))
-	model.Fit(K.V(x), K.V(y), solver, K.WithEpochs(14), K.WithClearLine(false))
+	model.Fit(K.V(x), K.V(y), solver, K.WithEpochs(14))
 
 	// Clear the directories
 	if err := os.RemoveAll("./dogs"); err != nil {
