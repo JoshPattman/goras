@@ -24,7 +24,7 @@ func SimpleConv2D(m *Model, name string, kernelSize int, numKernels int) *Conv2D
 		nil,
 		[]int{kernelSize, kernelSize},
 		numKernels,
-		[]int{kernelSize, kernelSize},
+		[]int{1, 1},
 		"same",
 	}
 	m.AddLayer(l)

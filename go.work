@@ -4,3 +4,4 @@ use ./
 use ./examples/1_xor
 use ./examples/2_xor_with_intermediate
 use ./examples/3_mnist
+use ./examples/4_dog_cats
