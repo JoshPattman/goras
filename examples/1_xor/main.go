@@ -113,17 +113,29 @@ func main() {
 	X=[1  0] Y=1 YP=0.953
 	X=[1  1] Y=0 YP=0.040
 	*/
+
+	// Lets also see if we can predict fewer than the batch size
+	xSliced, _ := x.Slice(T.S(0, 2))
+	ySliced, _ := y.Slice(T.S(0, 2))
+	fmt.Println(xSliced.Shape())
+	TestModel(loadedModel, xSliced, ySliced, "just two elements")
+
+	// And also more than the batch size
+	xConcated, _ := T.Concat(0, x, xSliced)
+	yConcated, _ := T.Concat(0, y, ySliced)
+	fmt.Println(xConcated.Shape())
+	TestModel(loadedModel, xConcated, yConcated, "six elements")
 }
 
 // Function to create the X and Y data as tensors
 func LoadXY() (*T.Dense, *T.Dense) {
 	x := T.New(
-		T.WithShape(4, 2),
-		T.WithBacking([]float64{0, 0, 0, 1, 1, 0, 1, 1}),
+		T.WithShape(5, 2),
+		T.WithBacking([]float64{0, 0, 0, 1, 1, 0, 1, 1, 0, 1}),
 	)
 	y := T.New(
-		T.WithShape(4, 1),
-		T.WithBacking([]float64{0, 1, 1, 0}),
+		T.WithShape(5, 1),
+		T.WithBacking([]float64{0, 1, 1, 0, 0}),
 	)
 	fmt.Printf("X:\n%v\n", x)
 	fmt.Printf("Y:\n%v\n", y)
@@ -159,10 +171,14 @@ func MakeModel() *K.Model {
 }
 
 // Function to run a model and print some values to the terminal
-func TestModel(model *K.Model, x, y *T.Dense, testName string) {
-	yp, _ := model.PredictBatch(K.V(x))
+func TestModel(model *K.Model, x, y T.Tensor, testName string) {
+	yps, err := model.Predict(K.V(x))
+	if err != nil {
+		panic(err)
+	}
+	yp := yps[0]
 	fmt.Printf("\nPredictions (%s):\n", testName)
-	for i := 0; i < x.Shape()[0]; i++ {
+	for i := 0; i < yp.Shape()[0]; i++ {
 		sx, _ := x.Slice(T.S(i))
 		sy, _ := y.Slice(T.S(i))
 		syp, _ := yp.Slice(T.S(i))

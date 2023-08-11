@@ -209,7 +209,8 @@ func (m *Model) PredictBatch(inputs []T.Tensor) (*T.Dense, error) {
 	if err := m.Machine.RunAll(); err != nil {
 		return nil, err
 	}
-	return T.New(T.WithShape(m.OutputValue.Shape()...), T.WithBacking(m.OutputValue.Data())), nil
+	// We need to clone here otherwise the next time the machine is run, the tensor will be changed
+	return T.New(T.WithShape(m.OutputValue.Shape()...), T.WithBacking(m.OutputValue.Data())).Clone().(*T.Dense), nil
 }
 
 // FitBatch runs the model on a batch of input data, and then trains the model on the target data.
@@ -281,7 +282,14 @@ func (m *Model) Fit(xs, ys []T.Tensor, solver G.Solver, opts ...FitOpt) error {
 	}
 	batchSize := m.getCurrentBatchSize()
 	// xBatchess and yBatchess are [batch][inputs]Tensor
-	xBatchess, yBatchess := batchMultiData(xs, batchSize), batchMultiData(ys, batchSize)
+	xBatchess, _, err := batchMultipleTensors(xs, batchSize, false)
+	if err != nil {
+		return err
+	}
+	yBatchess, _, err := batchMultipleTensors(ys, batchSize, false)
+	if err != nil {
+		return err
+	}
 	for epoch := 0; epoch < params.Epochs; epoch++ {
 		loss := 0.0
 		for bi := range xBatchess {
@@ -305,29 +313,117 @@ func (m *Model) Fit(xs, ys []T.Tensor, solver G.Solver, opts ...FitOpt) error {
 	return nil
 }
 
+func (m *Model) Predict(xs []T.Tensor) ([]T.Tensor, error) {
+	xBatchess, numPads, err := batchMultipleTensors(xs, m.getCurrentBatchSize(), true)
+	if err != nil {
+		return nil, err
+	}
+	yBatchess := make([][]T.Tensor, len(xBatchess))
+	for bi := range xBatchess {
+		var yBatch T.Tensor
+		yBatch, err := m.PredictBatch(xBatchess[bi])
+		if err != nil {
+			return nil, err
+		}
+		if bi == len(xBatchess)-1 {
+			yBatch, err = sliceBatch(yBatch, T.S(0, yBatch.Shape()[0]-numPads))
+			if err != nil {
+				return nil, err
+			}
+		}
+		yBatchess[bi] = []T.Tensor{yBatch}
+	}
+	ys := make([]T.Tensor, 0)
+	for i := range yBatchess[0] {
+		batchesForOutput := make([]T.Tensor, 0)
+		for batch := range yBatchess {
+			batchesForOutput = append(batchesForOutput, yBatchess[batch][i])
+		}
+		y, err := T.Concat(0, batchesForOutput[0], batchesForOutput[1:]...)
+		if err != nil {
+			return nil, err
+		}
+		ys = append(ys, y)
+
+	}
+	return ys, nil
+}
+
 func (m *Model) getCurrentBatchSize() int {
 	return m.InputNodes[0].Shape()[0]
 }
 
 // Creates a list of batches from the data. The data is a slice of tensors, representing multiple inputs.
-func batchMultiData(ds []T.Tensor, batchSize int) [][]T.Tensor {
-	var ret [][]T.Tensor
-	for i := 0; i < ds[0].Shape()[0]; i += batchSize {
-		if i+batchSize <= ds[0].Shape()[0] { // TODO - This ignores the remainder - it should do somthing else
-			// This is a full batch
-			var batch []T.Tensor
-			for _, d := range ds {
-				slice, err := d.Slice(T.S(i, i+batchSize))
-				if err != nil {
-					panic(err) // TODO - handle this error
-				}
-				batch = append(batch, slice)
-			}
-			ret = append(ret, batch)
-		}
-
+// If zeroPadding is true, the last batch will be padded with zeros if it is smaller than the batch size.
+// If zeroPadding is false, the last batch will be discarded if it is smaller than the batch size.
+// Takes input [input_num]Tensor and returns [batch][input_num]Tensor
+func batchMultipleTensors(inputs []T.Tensor, batchSize int, zeroPad bool) ([][]T.Tensor, int, error) {
+	numRows := inputs[0].Shape()[0]
+	remainder := numRows % batchSize
+	numNeededBatch := batchSize - remainder
+	if remainder == 0 {
+		numNeededBatch = 0
 	}
-	return ret
+	// We need to copy so we dont modify the inputs array. This does not do tensor copying, just the slice
+	paddedInputs := make([]T.Tensor, len(inputs))
+	copy(paddedInputs, inputs)
+	// If we have a number of inputs that does not perfectly fit, either pad or cut off the remainder
+	if remainder != 0 {
+		if zeroPad {
+			// Pad the inputs so the remainder is part of a batch
+			paddingShape := append([]int{numNeededBatch}, paddedInputs[0].Shape()[1:]...)
+			padding := T.New(T.WithShape(paddingShape...), T.Of(paddedInputs[0].Dtype()))
+			for i := range paddedInputs {
+				var err error
+				paddedInputs[i], err = T.Concat(0, paddedInputs[i], padding)
+				if err != nil {
+					return nil, 0, err
+				}
+			}
+		} else {
+			// Cut off the remainder
+			for inputI := range paddedInputs {
+				var err error
+				paddedInputs[inputI], err = sliceBatch(paddedInputs[inputI], T.S(0, numRows-remainder))
+				if err != nil {
+					return nil, 0, err
+				}
+			}
+		}
+	}
+	var batchedInputs [][]T.Tensor
+	numBatches := paddedInputs[0].Shape()[0] / batchSize
+	for batchI := 0; batchI < numBatches; batchI += 1 {
+		var batch []T.Tensor
+		for _, input := range paddedInputs {
+			batchStart := batchI * batchSize
+			slice, err := sliceBatch(input, T.S(batchStart, batchStart+batchSize))
+			if err != nil {
+				panic(err) // TODO - handle this error
+			}
+			batch = append(batch, slice)
+		}
+		batchedInputs = append(batchedInputs, batch)
+	}
+	return batchedInputs, numNeededBatch, nil
+}
+
+// This performs a slice on the first dimension but garantees that the output will have same ndims as input
+func sliceBatch(t T.Tensor, slice T.Slice) (T.Tensor, error) {
+	origShape := t.Shape()
+	st, err := t.Slice(slice)
+	if err != nil {
+		return nil, err
+	}
+	if len(st.Shape()) != len(origShape) {
+		newShape := origShape
+		newShape[0] = 1
+		err = st.Reshape(newShape...)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return st, nil
 }
 
 func ensureCorrectBatchSize(batchData T.Tensor, batchSize int) error {
