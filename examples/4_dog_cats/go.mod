@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/JoshPattman/goras v0.0.4
 	golang.org/x/image v0.11.0
+	gorgonia.org/gorgonia v0.9.17
 	gorgonia.org/tensor v0.9.24
 )
 
@@ -25,7 +26,6 @@ require (
 	google.golang.org/protobuf v1.25.0 // indirect
 	gorgonia.org/cu v0.9.3 // indirect
 	gorgonia.org/dawson v1.2.0 // indirect
-	gorgonia.org/gorgonia v0.9.17 // indirect
 	gorgonia.org/vecf32 v0.9.0 // indirect
 	gorgonia.org/vecf64 v0.9.0 // indirect
 )
