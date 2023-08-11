@@ -86,8 +86,6 @@ for i := 0; i < x.Shape()[0]; i++ {
 - Check if GPU support is working for cuda. I think it should work, but I havn't got round to testing yet.
 - Currently, batching for training and prediction discards the remainder of the last batch (eg batch size 8, 17 elements, will only predict 16 things and the last thing will be disacrded).
   - I will fix this once I hear back on an issue https://github.com/gorgonia/gorgonia/issues/204
+  - I also still need to add zero padding for prediction
 - Test and fix softmax and/or CCE
 - Add callbacks for `Fit`
-- Add Summary method to make visualising your network easier
-  - Add functions to the layer interface that return previous layer (? not sure how to do this: maby store the previous nodes and then have a function in model to lookup nodes. Or maby name every node made by the layer constructors (eg previous_node = model_1(dense).matmul where the matmul node gets called model_1(dense).matmul))
-  - Add functions to layer that return expected input and output shape
