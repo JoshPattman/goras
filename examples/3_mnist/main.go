@@ -40,6 +40,9 @@ func main() {
 	// Create the model
 	model := MakeModel()
 
+	// See a summary
+	fmt.Printf("\nModel Summary:\n%s\n", model.Summary())
+
 	// Lets use an ADAM solver again
 	solver := G.NewAdamSolver(G.WithLearnRate(0.001))
 
@@ -147,17 +150,17 @@ func MakeModel() *K.Model {
 	inputs := K.Input(model, n.Next(), batchSize, 1, 28, 28).Node()
 
 	// Convolution and pooling blocks
-	outputs := K.SimpleConv2D(model, n.Next(), 3, 32).MustAttach(inputs)
+	outputs := K.SimpleConv2D(model, n.Next(), 3, 16).MustAttach(inputs)
 	outputs = K.Activation(model, n.Next(), "relu").MustAttach(outputs)
 	outputs = K.SimpleMaxPooling2D(model, n.Next(), 2).MustAttach(outputs)
 	outputs = K.Dropout(model, n.Next(), 0.2).MustAttach(outputs)
 
-	outputs = K.SimpleConv2D(model, n.Next(), 3, 64).MustAttach(outputs)
+	outputs = K.SimpleConv2D(model, n.Next(), 3, 32).MustAttach(outputs)
 	outputs = K.Activation(model, n.Next(), "relu").MustAttach(outputs)
 	outputs = K.SimpleMaxPooling2D(model, n.Next(), 2).MustAttach(outputs)
 	outputs = K.Dropout(model, n.Next(), 0.2).MustAttach(outputs)
 
-	outputs = K.SimpleConv2D(model, n.Next(), 3, 128).MustAttach(outputs)
+	outputs = K.SimpleConv2D(model, n.Next(), 3, 32).MustAttach(outputs)
 	outputs = K.Activation(model, n.Next(), "relu").MustAttach(outputs)
 	outputs = K.SimpleMaxPooling2D(model, n.Next(), 2).MustAttach(outputs)
 
@@ -167,7 +170,7 @@ func MakeModel() *K.Model {
 	outputs = K.Dropout(model, n.Next(), 0.2).MustAttach(outputs)
 
 	// Dense layers
-	outputs = K.Dense(model, n.Next(), 625).MustAttach(outputs)
+	outputs = K.Dense(model, n.Next(), 64).MustAttach(outputs)
 	outputs = K.Activation(model, n.Next(), "relu").MustAttach(outputs)
 	outputs = K.Dropout(model, n.Next(), 0.55).MustAttach(outputs)
 	outputs = K.Dense(model, n.Next(), 10).MustAttach(outputs)

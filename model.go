@@ -313,6 +313,7 @@ func (m *Model) Fit(xs, ys []T.Tensor, solver G.Solver, opts ...FitOpt) error {
 	return nil
 }
 
+// Predict returns the models outputs for the given inputs. It cuts the inputs into batches so the inputs can be of any length.
 func (m *Model) Predict(xs []T.Tensor) ([]T.Tensor, error) {
 	xBatchess, numPads, err := batchMultipleTensors(xs, m.getCurrentBatchSize(), true)
 	if err != nil {
@@ -435,15 +436,22 @@ func ensureCorrectBatchSize(batchData T.Tensor, batchSize int) error {
 
 func (m *Model) Summary() string {
 	s := ""
+	totalParams := 0
 	for li := range m.Layers {
 		reqs := make([]string, 0)
 		for _, r := range m.Layers[li].INodes() {
 			reqs = append(reqs, r.Name())
 		}
-		s += fmt.Sprintf("Layer %-3v %9v::%-21vShape: %-20v From: %v\n",
+		numParams := 0
+		for _, p := range m.Layers[li].Parameters() {
+			numParams += p.DataSize()
+		}
+		totalParams += numParams
+		s += fmt.Sprintf("Layer %-3v %9v::%-21vShape: %-20v From: %-20v Num Params %v\n",
 			li, m.Layers[li].Name(), m.Layers[li].Type(),
 			fmt.Sprint(m.Layers[li].Node().Shape()),
-			reqs)
+			reqs, numParams)
 	}
+	s += fmt.Sprintf("Total number of parameters: %v\n", totalParams)
 	return s
 }
