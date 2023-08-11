@@ -65,14 +65,7 @@ func (l *Conv2DLayer) Attach(x *G.Node) (*G.Node, error) {
 	return on, err
 }
 
-// MustAttach attaches this layer to a previous node and panics if there is an error.
-func (l *Conv2DLayer) MustAttach(n *G.Node) *G.Node {
-	n, err := l.Attach(n)
-	if err != nil {
-		panic(err)
-	}
-	return n
-}
+func (l *Conv2DLayer) MustAttach(n *G.Node) *G.Node { return mustAttach(l, n) }
 
 // Parameters returns a map of the parameters of the layer.
 func (l *Conv2DLayer) Parameters() map[string]*G.Node {

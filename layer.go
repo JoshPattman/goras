@@ -42,3 +42,15 @@ func (l *LayerBase) Trainable() bool {
 func (l *LayerBase) Node() *G.Node {
 	return l.OutputNode
 }
+
+type attacher interface {
+	Attach(*G.Node) (*G.Node, error)
+}
+
+func mustAttach(l attacher, x *G.Node) *G.Node {
+	n, err := l.Attach(x)
+	if err != nil {
+		panic(err)
+	}
+	return n
+}

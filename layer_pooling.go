@@ -56,18 +56,12 @@ func (l *MaxPooling2DLayer) Attach(x *G.Node) (*G.Node, error) {
 	on, err := G.MaxPool2D(x, T.Shape(l.PoolSize), pad, l.Stride)
 	l.OutputNode = on
 	if on != nil {
-		G.WithName(l.Name() + ".maxpool2d")(on)
+		G.WithName(l.Name() + ".maxpool")(on)
 	}
 	return on, err
 }
 
-func (l *MaxPooling2DLayer) MustAttach(x *G.Node) *G.Node {
-	n, err := l.Attach(x)
-	if err != nil {
-		panic(err)
-	}
-	return n
-}
+func (l *MaxPooling2DLayer) MustAttach(n *G.Node) *G.Node { return mustAttach(l, n) }
 
 // Parameters returns a map of the parameters of the layer.
 func (l *MaxPooling2DLayer) Parameters() map[string]*G.Node { return map[string]*G.Node{} }

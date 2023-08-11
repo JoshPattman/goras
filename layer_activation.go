@@ -77,14 +77,7 @@ func (l *ActivationLayer) Attach(n *G.Node) (*G.Node, error) {
 	return on, err
 }
 
-// MustAttach attaches this layer to a previous node and panics on error.
-func (l *ActivationLayer) MustAttach(n *G.Node) *G.Node {
-	n, err := l.Attach(n)
-	if err != nil {
-		panic(err)
-	}
-	return n
-}
+func (l *ActivationLayer) MustAttach(n *G.Node) *G.Node { return mustAttach(l, n) }
 
 // Parameters returns a map of the parameters of the layer.
 func (l *ActivationLayer) Parameters() map[string]*G.Node { return make(map[string]*G.Node) }

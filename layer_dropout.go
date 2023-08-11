@@ -24,12 +24,6 @@ func (l *DropoutLayer) Attach(n *G.Node) (*G.Node, error) {
 	}
 	return on, err
 }
-func (l *DropoutLayer) MustAttach(n *G.Node) *G.Node {
-	n, err := l.Attach(n)
-	if err != nil {
-		panic(err)
-	}
-	return n
-}
+func (l *DropoutLayer) MustAttach(n *G.Node) *G.Node { return mustAttach(l, n) }
 
 func (d *DropoutLayer) Parameters() map[string]*G.Node { return make(map[string]*G.Node) }
