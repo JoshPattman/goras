@@ -83,8 +83,6 @@ fmt.Println()
 - Add these layers
   - `Recurrent`
   - `LSTM`
-  - `Convolution` - Simple implentation already
-  - `Pooling` - Simple implentation already
   - `Deconvolution` - I think I will have to implement this in Gorgonia and pull request it first
   - `Upsampling` - I think I will have to implement this in Gorgonia and pull request it first
   - `Embedding`
