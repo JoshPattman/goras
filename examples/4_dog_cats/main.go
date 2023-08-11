@@ -61,7 +61,6 @@ func main() {
 	fmt.Println("Built model")
 
 	fmt.Println(model.Summary())
-	return
 
 	solver := G.NewAdamSolver(G.WithLearnRate(0.001))
 	model.Fit(K.V(x), K.V(y), solver, K.WithEpochs(14), K.WithClearLine(false))
