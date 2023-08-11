@@ -17,6 +17,9 @@ func Input(m *Model, name string, shape ...int) *InputLayer {
 	t := G.NewTensor(m.Graph, m.DType, len(shape), G.WithShape(shape...))
 	i := &InputLayer{LayerBase{m.Graph, name, "input", false, m.DType, t}}
 	m.AddLayer(i)
+	if t != nil {
+		G.WithName(i.Name() + ".dropout")(t)
+	}
 	return i
 }
 

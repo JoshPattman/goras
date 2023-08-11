@@ -41,6 +41,9 @@ func (l *DenseLayer) Attach(n *G.Node) (*G.Node, error) {
 		return nil, err
 	}
 	l.OutputNode = multiplied
+	if l.OutputNode != nil {
+		G.WithName(l.Name() + ".matmul")(l.OutputNode)
+	}
 	return multiplied, nil
 }
 

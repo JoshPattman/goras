@@ -19,6 +19,9 @@ func Dropout(m *Model, name string, dropoutProbability float64) *DropoutLayer {
 func (l *DropoutLayer) Attach(n *G.Node) (*G.Node, error) {
 	on, err := G.Dropout(n, l.DropoutProbability)
 	l.OutputNode = on
+	if on != nil {
+		G.WithName(l.Name() + ".dropout")(on)
+	}
 	return on, err
 }
 func (l *DropoutLayer) MustAttach(n *G.Node) *G.Node {

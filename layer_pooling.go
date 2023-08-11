@@ -55,6 +55,9 @@ func (l *MaxPooling2DLayer) Attach(x *G.Node) (*G.Node, error) {
 	}
 	on, err := G.MaxPool2D(x, T.Shape(l.PoolSize), pad, l.Stride)
 	l.OutputNode = on
+	if on != nil {
+		G.WithName(l.Name() + ".maxpool2d")(on)
+	}
 	return on, err
 }
 

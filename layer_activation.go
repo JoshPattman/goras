@@ -71,6 +71,9 @@ func (l *ActivationLayer) Attach(n *G.Node) (*G.Node, error) {
 		return nil, fmt.Errorf("invalid activation '%s'", l.Activation)
 	}
 	l.OutputNode = on
+	if on != nil {
+		G.WithName(l.Name() + ".activation")(on)
+	}
 	return on, err
 }
 

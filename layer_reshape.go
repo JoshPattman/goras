@@ -28,6 +28,9 @@ func (l *ReshapeLayer) Attach(n *G.Node) (*G.Node, error) {
 	}
 	on, err := G.Reshape(n, l.ToShape)
 	l.OutputNode = on
+	if on != nil {
+		G.WithName(l.Name() + ".reshape")(on)
+	}
 	return on, err
 }
 

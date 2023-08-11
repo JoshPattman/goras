@@ -59,6 +59,9 @@ func (l *Conv2DLayer) Attach(x *G.Node) (*G.Node, error) {
 	l.Kernels = G.NewTensor(l.Graph, l.DType, 4, G.WithShape(l.NumKernels, previousKernels, l.KernelSize[0], l.KernelSize[1]), G.WithInit(G.GlorotN(1.0)))
 	on, err := G.Conv2d(x, l.Kernels, l.KernelSize, pad, l.Stride, []int{1, 1})
 	l.OutputNode = on
+	if on != nil {
+		G.WithName(l.Name() + ".conv")(on)
+	}
 	return on, err
 }
 
