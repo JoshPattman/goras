@@ -131,7 +131,7 @@ func MakeModel() *K.Model {
 	n := K.NewNamer("model")
 
 	// Create the input layer
-	inputs := K.Input(model, n.Next(), batchSize, inputNodes).Node
+	inputs := K.Input(model, n.Next(), batchSize, inputNodes).Node()
 	// Create the first Dense layer and its activation.
 	// Note that dense layers do not have an activation themselves, so you have to add one manually after
 	outputs := K.Dense(model, n.Next(), hiddenNodes).MustAttach(inputs)

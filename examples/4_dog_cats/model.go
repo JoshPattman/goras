@@ -9,7 +9,7 @@ func MakeModel() *K.Model {
 	m := K.NewModel(T.Float64)
 	n := K.NewNamer("model")
 
-	input := K.Input(m, n.Next(), 32, 3, 64, 64).Node
+	input := K.Input(m, n.Next(), 32, 3, 64, 64).Node()
 
 	// (32,3,64,64)
 	output := K.SimpleConv2D(m, n.Next(), 3, 16).MustAttach(input)

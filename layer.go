@@ -11,6 +11,7 @@ type Layer interface {
 	Name() string                   // This returns a name unique to this layer in the model
 	Trainable() bool                // This specifies whether the layer is updated during Fit()
 	Type() string                   // This is used for Summary()
+	Node() *G.Node                  // Returns the output node
 }
 
 // LayerBase is a struct that all layers should embed.
@@ -21,6 +22,7 @@ type LayerBase struct {
 	LayerType   string
 	IsTrainable bool
 	DType       T.Dtype
+	OutputNode  *G.Node
 }
 
 // Name returns the name of the layer.
@@ -34,4 +36,9 @@ func (l *LayerBase) Type() string {
 
 func (l *LayerBase) Trainable() bool {
 	return l.IsTrainable
+}
+
+// Node returns the final node in this layer (the output node)
+func (l *LayerBase) Node() *G.Node {
+	return l.OutputNode
 }

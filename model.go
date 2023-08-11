@@ -336,3 +336,11 @@ func ensureCorrectBatchSize(batchData T.Tensor, batchSize int) error {
 	}
 	return nil
 }
+
+func (m *Model) Summary() string {
+	s := ""
+	for li := range m.Layers {
+		s += fmt.Sprintf("Layer %-3v %9v::%-21vShape: %-20v From: []\n", li, m.Layers[li].Name(), m.Layers[li].Type(), fmt.Sprint(m.Layers[li].Node().Shape()))
+	}
+	return s
+}

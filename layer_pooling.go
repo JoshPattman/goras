@@ -21,7 +21,7 @@ type MaxPooling2DLayer struct {
 // It will have padding=same stride=poolSize, and it is the same in both dims.
 func SimpleMaxPooling2D(m *Model, name string, poolSize int) *MaxPooling2DLayer {
 	l := &MaxPooling2DLayer{
-		LayerBase{m.Graph, name, "maxpool2d", false, m.DType},
+		LayerBase{m.Graph, name, "maxpool2d", false, m.DType, nil},
 		[]int{poolSize, poolSize},
 		[]int{poolSize, poolSize},
 		"same",
@@ -34,7 +34,7 @@ func SimpleMaxPooling2D(m *Model, name string, poolSize int) *MaxPooling2DLayer 
 // Padding can be either "same" or "valid".
 func MaxPooling2D(m *Model, name string, poolSize, stride []int, padding string) *MaxPooling2DLayer {
 	l := &MaxPooling2DLayer{
-		LayerBase{m.Graph, name, "maxpool2d", false, m.DType},
+		LayerBase{m.Graph, name, "maxpool2d", false, m.DType, nil},
 		poolSize,
 		stride,
 		padding,
@@ -53,7 +53,9 @@ func (l *MaxPooling2DLayer) Attach(x *G.Node) (*G.Node, error) {
 		padW := calculateSamePadding(x.Shape()[3], l.PoolSize[1], l.Stride[1])
 		pad = append(padH, padW...)
 	}
-	return G.MaxPool2D(x, T.Shape(l.PoolSize), pad, l.Stride)
+	on, err := G.MaxPool2D(x, T.Shape(l.PoolSize), pad, l.Stride)
+	l.OutputNode = on
+	return on, err
 }
 
 func (l *MaxPooling2DLayer) MustAttach(x *G.Node) *G.Node {

@@ -17,7 +17,7 @@ type ActivationLayer struct {
 // Activation creates a new ActivationLayer on the Model with the given activation function.
 // The activation function can be one of ["sigmoid", "relu", "tanh", "binary", "softmax", "leakyrelu"].
 func Activation(m *Model, name string, activation string) *ActivationLayer {
-	a := &ActivationLayer{LayerBase{m.Graph, name, "activation(" + activation + ")", false, m.DType}, activation, 0.01}
+	a := &ActivationLayer{LayerBase{m.Graph, name, "activation(" + activation + ")", false, m.DType, nil}, activation, 0.01}
 	m.AddLayer(a)
 	return a
 }
@@ -52,22 +52,26 @@ func LeakyRelu(m *Model, name string, grad ...float64) *ActivationLayer {
 
 // Attach attaches this layer to a previous node.
 func (l *ActivationLayer) Attach(n *G.Node) (*G.Node, error) {
+	var on *G.Node
+	var err error
 	switch l.Activation {
 	case "sigmoid":
-		return G.Sigmoid(n)
+		on, err = G.Sigmoid(n)
 	case "relu":
-		return G.Rectify(n)
+		on, err = G.Rectify(n)
 	case "tanh":
-		return G.Tanh(n)
+		on, err = G.Tanh(n)
 	case "binary":
-		return G.Gt(n, G.NewConstant(0.0, G.WithType(l.DType)), true)
+		on, err = G.Gt(n, G.NewConstant(0.0, G.WithType(l.DType)), true)
 	case "softmax":
-		return G.SoftMax(n, 1)
+		on, err = G.SoftMax(n, 1)
 	case "leakyrelu":
-		return G.LeakyRelu(n, 0.01)
+		on, err = G.LeakyRelu(n, 0.01)
 	default:
 		return nil, fmt.Errorf("invalid activation '%s'", l.Activation)
 	}
+	l.OutputNode = on
+	return on, err
 }
 
 // MustAttach attaches this layer to a previous node and panics on error.

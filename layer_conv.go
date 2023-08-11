@@ -20,7 +20,7 @@ type Conv2DLayer struct {
 // It has a kernel shape of [kernelSize, kernelSize], a stride of [kernelSize, kernelSize], and padding of "same".
 func SimpleConv2D(m *Model, name string, kernelSize int, numKernels int) *Conv2DLayer {
 	l := &Conv2DLayer{
-		LayerBase{m.Graph, name, "conv2d", true, m.DType},
+		LayerBase{m.Graph, name, "conv2d", true, m.DType, nil},
 		nil,
 		[]int{kernelSize, kernelSize},
 		numKernels,
@@ -35,7 +35,7 @@ func SimpleConv2D(m *Model, name string, kernelSize int, numKernels int) *Conv2D
 // Options for padding are "same" or "valid".
 func Conv2D(m *Model, name string, kernelShape, stride []int, padding string, numKernels int) *Conv2DLayer {
 	l := &Conv2DLayer{
-		LayerBase{m.Graph, name, "conv2d", true, m.DType},
+		LayerBase{m.Graph, name, "conv2d", true, m.DType, nil},
 		nil,
 		kernelShape,
 		numKernels,
@@ -57,7 +57,9 @@ func (l *Conv2DLayer) Attach(x *G.Node) (*G.Node, error) {
 	}
 	previousKernels := x.Shape()[1]
 	l.Kernels = G.NewTensor(l.Graph, l.DType, 4, G.WithShape(l.NumKernels, previousKernels, l.KernelSize[0], l.KernelSize[1]), G.WithInit(G.GlorotN(1.0)))
-	return G.Conv2d(x, l.Kernels, l.KernelSize, pad, l.Stride, []int{1, 1})
+	on, err := G.Conv2d(x, l.Kernels, l.KernelSize, pad, l.Stride, []int{1, 1})
+	l.OutputNode = on
+	return on, err
 }
 
 // MustAttach attaches this layer to a previous node and panics if there is an error.

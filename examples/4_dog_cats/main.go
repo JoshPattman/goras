@@ -18,8 +18,8 @@ func main() {
 	fmt.Print("Number of dogs: ", len(dogsNames), "\n")
 	fmt.Print("Number of cats: ", len(catsNames), "\n")
 
-	dogsNames = dogsNames[:1024]
-	catsNames = catsNames[:1024]
+	dogsNames = dogsNames[:128]
+	catsNames = catsNames[:128]
 
 	dogImgs := make([]image.Image, 0)
 	catImgs := make([]image.Image, 0)
@@ -59,6 +59,9 @@ func main() {
 
 	model := MakeModel()
 	fmt.Println("Built model")
+
+	fmt.Println(model.Summary())
+	return
 
 	solver := G.NewAdamSolver(G.WithLearnRate(0.001))
 	model.Fit(K.V(x), K.V(y), solver, K.WithEpochs(14), K.WithClearLine(false))

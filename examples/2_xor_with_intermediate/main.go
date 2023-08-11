@@ -136,7 +136,7 @@ func MakeModel(isJustForEncoding bool) *K.Model {
 	n := K.NewNamer("model")
 
 	// Create the input layer
-	inputs := K.Input(model, n.Next(), 4, 2).Node
+	inputs := K.Input(model, n.Next(), 4, 2).Node()
 	// Add the encoder. This is the first layer
 	outputs := encoder(model, inputs)
 	// If we want to, also add the decoder. This is the second layer
