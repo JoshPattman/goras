@@ -12,7 +12,7 @@ type DropoutLayer struct {
 }
 
 func Dropout(m *Model, name string, dropoutProbability float64) *DropoutLayer {
-	d := &DropoutLayer{LayerBase{m.Graph, name, "dropout", false, m.DType, nil}, dropoutProbability}
+	d := &DropoutLayer{LayerBase{m.Graph, name, "dropout", false, m.DType, nil, nil}, dropoutProbability}
 	m.AddLayer(d)
 	return d
 }
@@ -22,6 +22,7 @@ func (l *DropoutLayer) Attach(n *G.Node) (*G.Node, error) {
 	if on != nil {
 		G.WithName(l.Name() + ".dropout")(on)
 	}
+	l.InputNodes = []*G.Node{n}
 	return on, err
 }
 func (l *DropoutLayer) MustAttach(n *G.Node) *G.Node { return mustAttach(l, n) }

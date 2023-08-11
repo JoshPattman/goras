@@ -340,10 +340,14 @@ func ensureCorrectBatchSize(batchData T.Tensor, batchSize int) error {
 func (m *Model) Summary() string {
 	s := ""
 	for li := range m.Layers {
-		s += fmt.Sprintf("Layer %-3v %9v::%-21vShape: %-20v From: [%v]\n",
+		reqs := make([]string, 0)
+		for _, r := range m.Layers[li].INodes() {
+			reqs = append(reqs, r.Name())
+		}
+		s += fmt.Sprintf("Layer %-3v %9v::%-21vShape: %-20v From: %v\n",
 			li, m.Layers[li].Name(), m.Layers[li].Type(),
 			fmt.Sprint(m.Layers[li].Node().Shape()),
-			m.Layers[li].Node().Name())
+			reqs)
 	}
 	return s
 }

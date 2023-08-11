@@ -15,11 +15,12 @@ func Input(m *Model, name string, shape ...int) *InputLayer {
 		panic(err)
 	}
 	t := G.NewTensor(m.Graph, m.DType, len(shape), G.WithShape(shape...))
-	i := &InputLayer{LayerBase{m.Graph, name, "input", false, m.DType, t}}
+	i := &InputLayer{LayerBase{m.Graph, name, "input", false, m.DType, t, nil}}
 	m.AddLayer(i)
 	if t != nil {
-		G.WithName(i.Name() + ".dropout")(t)
+		G.WithName(i.Name() + ".input")(t)
 	}
+	i.InputNodes = []*G.Node{}
 	return i
 }
 

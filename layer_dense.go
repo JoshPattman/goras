@@ -17,7 +17,7 @@ type DenseLayer struct {
 
 // Dense creates a new dense layer on the specified model.
 func Dense(m *Model, name string, nodes int) *DenseLayer {
-	d := &DenseLayer{LayerBase{m.Graph, name, "dense", true, m.DType, nil}, nil, nodes}
+	d := &DenseLayer{LayerBase{m.Graph, name, "dense", true, m.DType, nil, nil}, nil, nodes}
 	m.AddLayer(d)
 	return d
 }
@@ -44,6 +44,7 @@ func (l *DenseLayer) Attach(n *G.Node) (*G.Node, error) {
 	if l.OutputNode != nil {
 		G.WithName(l.Name() + ".matmul")(l.OutputNode)
 	}
+	l.InputNodes = []*G.Node{n}
 	return multiplied, nil
 }
 

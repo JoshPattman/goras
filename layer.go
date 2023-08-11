@@ -12,6 +12,7 @@ type Layer interface {
 	Trainable() bool                // This specifies whether the layer is updated during Fit()
 	Type() string                   // This is used for Summary()
 	Node() *G.Node                  // Returns the output node
+	INodes() []*G.Node              // Returns the input nodes
 }
 
 // LayerBase is a struct that all layers should embed.
@@ -23,6 +24,7 @@ type LayerBase struct {
 	IsTrainable bool
 	DType       T.Dtype
 	OutputNode  *G.Node
+	InputNodes  []*G.Node
 }
 
 // Name returns the name of the layer.
@@ -41,6 +43,11 @@ func (l *LayerBase) Trainable() bool {
 // Node returns the final node in this layer (the output node)
 func (l *LayerBase) Node() *G.Node {
 	return l.OutputNode
+}
+
+// INodes returns the input nodes of this layer.
+func (l *LayerBase) INodes() []*G.Node {
+	return l.InputNodes
 }
 
 type attacher interface {

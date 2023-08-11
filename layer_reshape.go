@@ -15,7 +15,7 @@ type ReshapeLayer struct {
 
 func Reshape(model *Model, name string, newShape T.Shape) *ReshapeLayer {
 	l := &ReshapeLayer{
-		LayerBase: LayerBase{model.Graph, name, "reshape", false, model.DType, nil},
+		LayerBase: LayerBase{model.Graph, name, "reshape", false, model.DType, nil, nil},
 		ToShape:   newShape,
 	}
 	model.AddLayer(l)
@@ -31,6 +31,7 @@ func (l *ReshapeLayer) Attach(n *G.Node) (*G.Node, error) {
 	if on != nil {
 		G.WithName(l.Name() + ".reshape")(on)
 	}
+	l.InputNodes = []*G.Node{n}
 	return on, err
 }
 
