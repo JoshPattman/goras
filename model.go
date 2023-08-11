@@ -253,10 +253,11 @@ func (m *Model) FitBatch(inputs, targets []T.Tensor, solver G.Solver) (float64, 
 type FitOpt func(*fitParams)
 
 type fitParams struct {
-	Epochs    int
-	LogEvery  int
-	Verbose   bool
-	ClearLine bool
+	Epochs            int
+	LogEvery          int
+	Verbose           bool
+	ClearLine         bool
+	EpochEndCallbakcs []EpochCallback
 }
 
 // WithEpochs sets the number of epochs to train for.
@@ -271,12 +272,18 @@ func WithVerbose(verbose bool) FitOpt { return func(p *fitParams) { p.Verbose = 
 // WithClearLine sets whether to clear the line when logging the loss.
 func WithClearLine(clear bool) FitOpt { return func(p *fitParams) { p.ClearLine = clear } }
 
+// WithEpochCallback adds a callback to be called at the end of each epoch.
+func WithEpochCallback(cb EpochCallback) FitOpt {
+	return func(p *fitParams) { p.EpochEndCallbakcs = append(p.EpochEndCallbakcs, cb) }
+}
+
 func (m *Model) Fit(xs, ys []T.Tensor, solver G.Solver, opts ...FitOpt) error {
 	params := &fitParams{
-		Epochs:    1,
-		LogEvery:  1,
-		Verbose:   true,
-		ClearLine: false,
+		Epochs:            1,
+		LogEvery:          1,
+		Verbose:           true,
+		ClearLine:         false,
+		EpochEndCallbakcs: []EpochCallback{},
 	}
 	for _, o := range opts {
 		o(params)
@@ -291,8 +298,8 @@ func (m *Model) Fit(xs, ys []T.Tensor, solver G.Solver, opts ...FitOpt) error {
 	if err != nil {
 		return err
 	}
-	for epoch := 0; epoch < params.Epochs; epoch++ {
-		isLoggingEpoch := ((epoch%params.LogEvery == 0) || (epoch == params.Epochs-1))
+	for epoch := 1; epoch <= params.Epochs; epoch++ {
+		isLoggingEpoch := ((epoch%params.LogEvery == 0) || (epoch == params.Epochs) || (epoch == 1))
 		logEveryBatch := len(xBatchess) / 100
 		if logEveryBatch == 0 {
 			logEveryBatch = 1
@@ -309,7 +316,7 @@ func (m *Model) Fit(xs, ys []T.Tensor, solver G.Solver, opts ...FitOpt) error {
 			if params.Verbose && isLoggingEpoch && bi%logEveryBatch == 0 {
 				bar := strings.Repeat("=", int(numBatches/float64(len(xBatchess))*39))
 				bar += ">"
-				fmt.Printf("\rEpoch %d/%d - Loss: %f |%-40v|", epoch+1, params.Epochs, loss/numBatches, bar)
+				fmt.Printf("\rEpoch %d/%d - Loss: %f |%-40v|", epoch, params.Epochs, loss/numBatches, bar)
 			}
 
 		}
@@ -318,7 +325,12 @@ func (m *Model) Fit(xs, ys []T.Tensor, solver G.Solver, opts ...FitOpt) error {
 			if params.ClearLine {
 				lineEnd = "\r"
 			}
-			fmt.Printf("\rEpoch %d/%d - Loss: %f |Done| %40v%v", epoch+1, params.Epochs, loss/numBatches, "", lineEnd)
+			fmt.Printf("\rEpoch %d/%d - Loss: %f |Done| %40v%v", epoch, params.Epochs, loss/numBatches, "", lineEnd)
+		}
+		for _, cb := range params.EpochEndCallbakcs {
+			if err := cb(epoch); err != nil {
+				return err
+			}
 		}
 	}
 	if params.Verbose {

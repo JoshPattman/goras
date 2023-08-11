@@ -48,8 +48,9 @@ func main() {
 
 	// Fit the model. You only need about 3 epochs as mnist is quite simple.
 	// We also specify not to clear the line, which means we can see the progress.
+	// For exemplar purposes, we also save the model parameters after each epoch using a callback. You can also write your own callbacks.
 	fitStart := time.Now()
-	err = model.Fit(K.V(x), K.V(y), solver, K.WithClearLine(false), K.WithEpochs(3))
+	err = model.Fit(K.V(x), K.V(y), solver, K.WithClearLine(false), K.WithEpochs(3), K.WithEpochCallback(K.SaveModelParametersCallback(model, "./model.gob")))
 	if err != nil {
 		panic(err)
 	}
