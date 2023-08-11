@@ -11,12 +11,12 @@ type Layer interface {
 	Name() string                   // This returns a name unique to this layer in the model
 	Trainable() bool                // This specifies whether the layer is updated during Fit()
 	Type() string                   // This is used for Summary()
-	Node() *G.Node                  // Returns the output node
-	INodes() []*G.Node              // Returns the input nodes
+	Node() *G.Node                  // This returns the node used as the main output for this layer
+	INodes() []*G.Node              // This returns all nodes used as inputs to this layer
 }
 
 // LayerBase is a struct that all layers should embed.
-// It provides a Graph and a name, and implements the Name() and Trainable methods of the Layer interface.
+// It provides some useful shared fields and methods.
 type LayerBase struct {
 	Graph       *G.ExprGraph
 	LayerName   string
@@ -27,15 +27,17 @@ type LayerBase struct {
 	InputNodes  []*G.Node
 }
 
-// Name returns the name of the layer.
+// Name returns the name of the layer (e.g. "model_1").
 func (l *LayerBase) Name() string {
 	return l.LayerName
 }
 
+// Type returns the type of the layer (e.g. "dense").
 func (l *LayerBase) Type() string {
 	return l.LayerType
 }
 
+// Trainable returns whether the layer is trainable at the moment.
 func (l *LayerBase) Trainable() bool {
 	return l.IsTrainable
 }
@@ -50,6 +52,7 @@ func (l *LayerBase) INodes() []*G.Node {
 	return l.InputNodes
 }
 
+// Stuff for reducing repetitive code
 type attacher interface {
 	Attach(*G.Node) (*G.Node, error)
 }

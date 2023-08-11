@@ -22,26 +22,34 @@ func Activation(m *Model, name string, activation string) *ActivationLayer {
 	return a
 }
 
+// Sigmoid creates a new ActivationLayer on the Model with the sigmoid activation function.
 func Sigmoid(m *Model, name string) *ActivationLayer {
 	return Activation(m, name, "sigmoid")
 }
 
+// Relu creates a new ActivationLayer on the Model with the relu activation function.
 func Relu(m *Model, name string) *ActivationLayer {
 	return Activation(m, name, "relu")
 }
 
+// Tanh creates a new ActivationLayer on the Model with the tanh activation function.
 func Tanh(m *Model, name string) *ActivationLayer {
 	return Activation(m, name, "tanh")
 }
 
+// Binary creates a new ActivationLayer on the Model with the binary activation function.
 func Binary(m *Model, name string) *ActivationLayer {
 	return Activation(m, name, "binary")
 }
 
+// Softmax creates a new ActivationLayer on the Model with the softmax activation function.
 func Softmax(m *Model, name string) *ActivationLayer {
 	return Activation(m, name, "softmax")
 }
 
+// LeakyRelu creates a new ActivationLayer on the Model with the leaky relu activation function.
+// You can optionally specify the negative gradient (LeakyRely(model, name, grad)).
+// If you don't, it will default to 0.01.
 func LeakyRelu(m *Model, name string, grad ...float64) *ActivationLayer {
 	a := Activation(m, name, "leakyrelu")
 	if len(grad) > 0 {
@@ -78,16 +86,8 @@ func (l *ActivationLayer) Attach(n *G.Node) (*G.Node, error) {
 	return on, err
 }
 
+// MustAttach attaches this layer to a previous node. It panics on error.
 func (l *ActivationLayer) MustAttach(n *G.Node) *G.Node { return mustAttach(l, n) }
 
 // Parameters returns a map of the parameters of the layer.
 func (l *ActivationLayer) Parameters() map[string]*G.Node { return make(map[string]*G.Node) }
-
-func IsValidActivation(ac string) bool {
-	switch ac {
-	case "sigmoid", "relu", "tanh", "binary", "softmax", "leakyrelu":
-		return true
-	default:
-		return false
-	}
-}

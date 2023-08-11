@@ -48,6 +48,7 @@ func (l *DenseLayer) Attach(n *G.Node) (*G.Node, error) {
 	return multiplied, nil
 }
 
+// MustAttach attaches the layer to a previous node, panicking on error.
 func (l *DenseLayer) MustAttach(n *G.Node) *G.Node { return mustAttach(l, n) }
 
 // Parameters returns a map of the parameters of the layer.

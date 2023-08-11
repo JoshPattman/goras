@@ -43,6 +43,7 @@ func MaxPooling2D(m *Model, name string, poolSize, stride []int, padding string)
 	return l
 }
 
+// Attach attaches the MaxPooling2DLayer to the given node.
 func (l *MaxPooling2DLayer) Attach(x *G.Node) (*G.Node, error) {
 	if err := validateShape(x.Shape(), valNDims(4)); err != nil {
 		return nil, err
@@ -62,11 +63,13 @@ func (l *MaxPooling2DLayer) Attach(x *G.Node) (*G.Node, error) {
 	return on, err
 }
 
+// MustAttach attaches the MaxPooling2DLayer to the given node.
 func (l *MaxPooling2DLayer) MustAttach(n *G.Node) *G.Node { return mustAttach(l, n) }
 
 // Parameters returns a map of the parameters of the layer.
 func (l *MaxPooling2DLayer) Parameters() map[string]*G.Node { return map[string]*G.Node{} }
 
+// This function calculates the padding for "same".
 // I borrowed the calculations from here: https://www.pico.net/kb/what-is-the-difference-between-same-and-valid-padding-in-tf-nn-max-pool-of-tensorflow/
 func calculateSamePadding(width, filterSize, stride int) []int {
 	outWidth := int(math.Ceil(float64(width) / float64(stride)))

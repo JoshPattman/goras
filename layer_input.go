@@ -9,7 +9,7 @@ type InputLayer struct {
 }
 
 // Input creates a new input layer on the specified model.
-// To access the resulting *Node, use the .Node field.
+// To access the resulting *Node, use the .Node() function.
 func Input(m *Model, name string, shape ...int) *InputLayer {
 	if err := validateShape(shape, valAtLeastNDims(1)); err != nil {
 		panic(err)

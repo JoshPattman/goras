@@ -66,6 +66,7 @@ func BCE(output, target *G.Node) (*G.Node, error) {
 
 // CCE creates the nodes to calculate categorical crossentropy loss between a predicted and target node.
 // It should be used when using Model.Build().
+// IMPORTANT: I think this is currently broken. Either this or softmax.
 func CCE(output, target *G.Node) (*G.Node, error) {
 	x, err := G.Log(output)
 	if err != nil {

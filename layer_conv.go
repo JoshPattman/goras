@@ -17,7 +17,8 @@ type Conv2DLayer struct {
 }
 
 // SimpleConv2D is a constructor to create a 2D convolutional layer.
-// It has a kernel shape of [kernelSize, kernelSize], a stride of [kernelSize, kernelSize], and padding of "same".
+// It has a kernel shape of [kernelSize, kernelSize], a stride of [1, 1], and padding of "same".
+// This means that the output will be the same shape as the input.
 func SimpleConv2D(m *Model, name string, kernelSize int, numKernels int) *Conv2DLayer {
 	l := &Conv2DLayer{
 		LayerBase{m.Graph, name, "conv2d", true, m.DType, nil, nil},
@@ -66,6 +67,7 @@ func (l *Conv2DLayer) Attach(x *G.Node) (*G.Node, error) {
 	return on, err
 }
 
+// MustAttach attaches this layer to a previous node. It panics on error.
 func (l *Conv2DLayer) MustAttach(n *G.Node) *G.Node { return mustAttach(l, n) }
 
 // Parameters returns a map of the parameters of the layer.
