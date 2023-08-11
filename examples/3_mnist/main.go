@@ -1,7 +1,8 @@
-package main
-
 // In this example, we create a model to classify MNIST digits.
-// It uses convolution2d and maxpool2d layers, and it is the same underlying model as https://gorgonia.org/tutorials/mnist/
+// It uses convolution2d and maxpool2d layers, and it is a similar underlying model as https://gorgonia.org/tutorials/mnist/
+// the only difference being that this model uses fewer conv filters and a smaller dense layer, for speed purposes.
+// We will also use dropout layers, and use a save model callback in the fit function to save the model after every epoch.
+package main
 
 import (
 	"fmt"
@@ -12,11 +13,11 @@ import (
 	T "gorgonia.org/tensor"
 )
 
-// We will define a dtype. Float32 in theory should be faster but I haven't seen much difference. It should also occupy less memory though.
+// We will define a dtype. Float32 in theory should be faster than Float64 but I haven't seen much difference. It does also occupy less memory though.
 var dType = T.Float32
 
 func main() {
-	// Lets start by loading MNIST into tensors
+	// Lets start by loading MNIST into tensors. This code is explained in more detail in the Gorgonia tutorial.
 	x, y, err := Load("train", "./mnist", dType)
 	if err != nil {
 		panic(err)
@@ -40,15 +41,17 @@ func main() {
 	// Create the model
 	model := MakeModel()
 
-	// See a summary
+	// See a summary of the model. You can see this model has many more parameters (numbers to change) than the XOR models.
 	fmt.Printf("\nModel Summary:\n%s\n", model.Summary())
 
 	// Lets use an ADAM solver again
 	solver := G.NewAdamSolver(G.WithLearnRate(0.001))
 
-	// Fit the model. You only need about 3 epochs as mnist is quite simple.
-	// We also specify not to clear the line, which means we can see the progress.
-	// For exemplar purposes, we also save the model parameters after each epoch using a callback. You can also write your own callbacks.
+	// Fit the model. You only need about 3 epochs as mnist is quite simple, and there are also a lot of digits.
+	// When we run this, the fit method will by default show us a loading bar and some current information.
+	// This can be turned off by adding K.WithVerbose(false) as one of the arguments.
+	// For exemplar purposes, we also save the model parameters after each epoch using a callback.
+	// You can also write your own callbacks very simply by making a function `func (epoch int) error`.
 	fitStart := time.Now()
 	err = model.Fit(K.V(x), K.V(y), solver, K.WithClearLine(false), K.WithEpochs(3), K.WithEpochCallback(K.SaveModelParametersCallback(model, "./model.gob")))
 	if err != nil {
@@ -56,25 +59,32 @@ func main() {
 	}
 	fmt.Printf("Done Training. It took %v\n", time.Since(fitStart))
 
+	// On my not very powerful laptop, this took ~5 minutes.
+	// I have not tested it yet, but I hope to one day allow Goras to use GPUs, which would speed up this process greatly.
+	// This should be very feasable, as Gorgonia already supports some GPU operations.
 	/* OUTPUT:
-	Epoch 1/3 - Loss: 0.001303
-	Epoch 2/3 - Loss: 0.000731
-	Epoch 3/3 - Loss: 0.000648
+	Epoch 1/3 - Loss: 0.022752 |Done|
+	Epoch 2/3 - Loss: 0.011735 |Done|
+	Epoch 3/3 - Loss: 0.010036 |Done|
+
+	Done Training. It took 4m38.525445874s
 	*/
 
-	// Now we can predict on the first 16 images
-	// For now, we need to predict a multiple of the batch size (which is 16)
+	// Now we can predict some images
 	fmt.Println("\nPredictions:")
-
-	xB, _ := x.Slice(T.S(0, 16))
-	yB, _ := y.Slice(T.S(0, 16))
-	yBP, err := model.PredictBatch(K.V(xB))
+	numToPredict := 10
+	xB, _ := x.Slice(T.S(0, numToPredict))
+	yB, _ := y.Slice(T.S(0, numToPredict))
+	yBsP, err := model.Predict(K.V(xB))
 	if err != nil {
 		panic(err)
 	}
-	// Now for each prediction, we can get the argmax to see what the model predicted
-	// We can then print that out along with the actual label to see if it was right
-	for i := 0; i < 16; i++ {
+	yBP := yBsP[0]
+
+	// For each prediction, our model outputs 10 numbers which correspond to how likely the image is that digit.
+	//We can get the argmax to see what digit the model predicted was most likely.
+	// We can then print that out along with the actual label to see if it was right.
+	for i := 0; i < numToPredict; i++ {
 		yp, _ := yBP.Slice(T.S(i))
 		yb, _ := yB.Slice(T.S(i))
 		predicted, _ := T.Argmax(yp, 0)
@@ -84,76 +94,57 @@ func main() {
 		fmt.Println()
 	}
 
-	// Notice how well the model did! It got all but one correct.
+	// Notice how well the model did! It got all correct!
 	// This may not be the case for you, but it should be pretty close.
 	/*OUTPUT:
-	Predictions:
-		Prediction: 3
-		Actual: 5
+		Predictions:
+	        Prediction: 5
+	        Actual: 5
 
-		Prediction: 0
-		Actual: 0
+	        Prediction: 0
+	        Actual: 0
 
-		Prediction: 4
-		Actual: 4
+	        Prediction: 4
+	        Actual: 4
 
-		Prediction: 1
-		Actual: 1
+	        Prediction: 1
+	        Actual: 1
 
-		Prediction: 9
-		Actual: 9
+	        Prediction: 9
+	        Actual: 9
 
-		Prediction: 2
-		Actual: 2
+	        Prediction: 2
+	        Actual: 2
 
-		Prediction: 1
-		Actual: 1
+	        Prediction: 1
+	        Actual: 1
 
-		Prediction: 3
-		Actual: 3
+	        Prediction: 3
+	        Actual: 3
 
-		Prediction: 1
-		Actual: 1
+	        Prediction: 1
+	        Actual: 1
 
-		Prediction: 4
-		Actual: 4
-
-		Prediction: 3
-		Actual: 3
-
-		Prediction: 5
-		Actual: 5
-
-		Prediction: 3
-		Actual: 3
-
-		Prediction: 6
-		Actual: 6
-
-		Prediction: 1
-		Actual: 1
-
-		Prediction: 7
-		Actual: 7
+	        Prediction: 4
+	        Actual: 4
 	*/
 }
 
-// Function to create the same model as descibed in https://gorgonia.org/tutorials/mnist/
+// Function to create a similar model as descibed in https://gorgonia.org/tutorials/mnist/
 func MakeModel() *K.Model {
-	// Lets define a batch size of 16 for now
 	batchSize := 16
 
-	// Create the model and namer
 	model := K.NewModel(dType)
 	n := K.NewNamer("model")
 
-	// Input shape is (batch_size, channels(this is one for b&w), img_x, img_y)
+	// Input shape is (batch_size, channels(this is 1 for b&w), img_x, img_y)
 	inputs := K.Input(model, n(), batchSize, 1, 28, 28).Node()
 
 	// Convolution and pooling blocks
 	outputs := K.SimpleConv2D(model, n(), 3, 16).MustAttach(inputs)
 	outputs = K.Activation(model, n(), "relu").MustAttach(outputs)
 	outputs = K.SimpleMaxPooling2D(model, n(), 2).MustAttach(outputs)
+	// A Dropout layer simply zeros out some randomly selected values. This can help with overfitting.
 	outputs = K.Dropout(model, n(), 0.2).MustAttach(outputs)
 
 	outputs = K.SimpleConv2D(model, n(), 3, 32).MustAttach(outputs)
@@ -165,7 +156,8 @@ func MakeModel() *K.Model {
 	outputs = K.Activation(model, n(), "relu").MustAttach(outputs)
 	outputs = K.SimpleMaxPooling2D(model, n(), 2).MustAttach(outputs)
 
-	// Reshape and dropout
+	// Reshape and dropout. We want to reshape from (batch_size, prev_filters, prev_height, prev_width) to (batch_size, prev_filters*prev_height*prev_width).
+	// This flattens the data so a dense layer can understand it.
 	b, c, h, w := outputs.Shape()[0], outputs.Shape()[1], outputs.Shape()[2], outputs.Shape()[3]
 	outputs = K.Reshape(model, n(), T.Shape{b, c * h * w}).MustAttach(outputs)
 	outputs = K.Dropout(model, n(), 0.2).MustAttach(outputs)

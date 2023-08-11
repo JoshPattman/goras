@@ -12,8 +12,11 @@ import (
 	T "gorgonia.org/tensor"
 )
 
+// This stops the warning that tensorToImages is not used.
+var _ = tensorToImages
+
+// Function to look at a directory and find all files that start with cat or dog, and return the names
 func getAllDogsCatsNames(datasetDir string) ([]string, []string) {
-	// Find all filenames in the dataset directory
 	filenames, err := filepath.Glob(datasetDir + "/*")
 	if err != nil {
 		panic(err)
@@ -30,6 +33,7 @@ func getAllDogsCatsNames(datasetDir string) ([]string, []string) {
 	return dogs, cats
 }
 
+// Function to load a jpg image from a file
 func loadImageFromFile(filename string) (image.Image, error) {
 	f, err := os.Open(filename)
 	if err != nil {
@@ -40,6 +44,7 @@ func loadImageFromFile(filename string) (image.Image, error) {
 	return img, err
 }
 
+// Function to save an image to a jpg file
 func saveImageToFile(img image.Image, filename string) error {
 	f, err := os.Create(filename)
 	if err != nil {
@@ -49,12 +54,14 @@ func saveImageToFile(img image.Image, filename string) error {
 	return jpeg.Encode(f, img, nil)
 }
 
+// Function to strech or sqeeze an image to a certain size.
 func resizeImage(img image.Image, width, height int) image.Image {
 	dst := image.NewRGBA(image.Rect(0, 0, width, height))
 	draw.NearestNeighbor.Scale(dst, dst.Bounds(), img, img.Bounds(), draw.Over, nil)
 	return dst
 }
 
+// Function to convert a list of images to a tensor
 func imagesToTensor(imgs []image.Image) T.Tensor {
 	xDim, yDim := imgs[0].Bounds().Size().X, imgs[0].Bounds().Size().Y
 	data := []float64{}
@@ -81,6 +88,7 @@ func imagesToTensor(imgs []image.Image) T.Tensor {
 	return T.New(T.WithShape(len(imgs), 3, xDim, yDim), T.WithBacking(data))
 }
 
+// Function to convert a tensor to a list of images
 func tensorToImages(tens T.Tensor) []image.Image {
 	xDim, yDim := tens.Shape()[2], tens.Shape()[3]
 	imgs := make([]image.Image, tens.Shape()[0])

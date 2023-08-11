@@ -92,4 +92,5 @@ fmt.Println()
   - I will fix this once I hear back on an issue https://github.com/gorgonia/gorgonia/issues/204
   - Batching for prediction zero pads but this is a bit wasteful
 - Test and fix softmax and/or CCE
-- Add callbacks for `Fit`
+- Add more callbacks for `Fit`
+- Add a shuffle parameter to fit
