@@ -31,6 +31,17 @@ func main() {
 	// Create the model
 	model := MakeModel()
 
+	// Lets have a look at the model
+	fmt.Printf("\nModel Summary:\n%s\n", model.Summary())
+	/*OUTPUT
+	Model Summary:
+	Layer 0     model_1::input                Shape: (4, 2)               From: []
+	Layer 1     model_2::dense                Shape: (4, 5)               From: [model_1.input]
+	Layer 2     model_3::activation(sigmoid)  Shape: (4, 5)               From: [model_2.matmul]
+	Layer 3     model_4::dense                Shape: (4, 1)               From: [model_3.activation]
+	Layer 4     model_5::activation(sigmoid)  Shape: (4, 1)               From: [model_4.matmul]
+	*/
+
 	// Test the model with no training
 	TestModel(model, x, y, "no training")
 
