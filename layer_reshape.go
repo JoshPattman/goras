@@ -15,7 +15,7 @@ type ReshapeLayer struct {
 
 func Reshape(model *Model, name string, newShape T.Shape) *ReshapeLayer {
 	return &ReshapeLayer{
-		LayerBase: LayerBase{model.Graph, name, false, model.DType},
+		LayerBase: LayerBase{model.Graph, name, "reshape", false, model.DType},
 		ToShape:   newShape,
 	}
 }
@@ -34,5 +34,3 @@ func (l *ReshapeLayer) MustAttach(n *G.Node) *G.Node {
 	}
 	return n
 }
-
-func (l *ReshapeLayer) Type() string { return "reshape" }

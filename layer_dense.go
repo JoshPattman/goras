@@ -17,7 +17,7 @@ type DenseLayer struct {
 
 // Dense creates a new dense layer on the specified model.
 func Dense(m *Model, name string, nodes int) *DenseLayer {
-	d := &DenseLayer{LayerBase{m.Graph, name, true, m.DType}, nil, nodes}
+	d := &DenseLayer{LayerBase{m.Graph, name, "dense", true, m.DType}, nil, nodes}
 	m.AddLayer(d)
 	return d
 }
@@ -56,6 +56,3 @@ func (l *DenseLayer) MustAttach(n *G.Node) *G.Node {
 func (l *DenseLayer) Parameters() map[string]*G.Node {
 	return map[string]*G.Node{"weights": l.Weights}
 }
-
-// Type returns the type of the layer.
-func (l *DenseLayer) Type() string { return "dense" }

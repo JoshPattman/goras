@@ -18,6 +18,7 @@ type Layer interface {
 type LayerBase struct {
 	Graph       *G.ExprGraph
 	LayerName   string
+	LayerType   string
 	IsTrainable bool
 	DType       T.Dtype
 }
@@ -25,6 +26,10 @@ type LayerBase struct {
 // Name returns the name of the layer.
 func (l *LayerBase) Name() string {
 	return l.LayerName
+}
+
+func (l *LayerBase) Type() string {
+	return l.LayerType
 }
 
 func (l *LayerBase) Trainable() bool {

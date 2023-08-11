@@ -20,7 +20,7 @@ type Conv2DLayer struct {
 // It has a kernel shape of [kernelSize, kernelSize], a stride of [kernelSize, kernelSize], and padding of "same".
 func SimpleConv2D(m *Model, name string, kernelSize int, numKernels int) *Conv2DLayer {
 	l := &Conv2DLayer{
-		LayerBase{m.Graph, name, true, m.DType},
+		LayerBase{m.Graph, name, "conv2d", true, m.DType},
 		nil,
 		[]int{kernelSize, kernelSize},
 		numKernels,
@@ -35,7 +35,7 @@ func SimpleConv2D(m *Model, name string, kernelSize int, numKernels int) *Conv2D
 // Options for padding are "same" or "valid".
 func Conv2D(m *Model, name string, kernelShape, stride []int, padding string, numKernels int) *Conv2DLayer {
 	l := &Conv2DLayer{
-		LayerBase{m.Graph, name, true, m.DType},
+		LayerBase{m.Graph, name, "conv2d", true, m.DType},
 		nil,
 		kernelShape,
 		numKernels,
@@ -73,6 +73,3 @@ func (l *Conv2DLayer) MustAttach(n *G.Node) *G.Node {
 func (l *Conv2DLayer) Parameters() map[string]*G.Node {
 	return map[string]*G.Node{"kernels": l.Kernels}
 }
-
-// Type returns the type of the layer as a string.
-func (l *Conv2DLayer) Type() string { return "conv2d" }
