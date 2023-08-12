@@ -3,6 +3,7 @@ module github.com/JoshPattman/goras
 go 1.20
 
 require (
+	golang.org/x/image v0.0.0-20190227222117-0694c2d4d067
 	gorgonia.org/gorgonia v0.9.17
 	gorgonia.org/tensor v0.9.24
 )
