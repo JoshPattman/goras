@@ -72,7 +72,7 @@ func (l *ActivationLayer) Attach(n *G.Node) (*G.Node, error) {
 	case "binary":
 		on, err = G.Gt(n, G.NewConstant(0.0, G.WithType(l.DType)), true)
 	case "softmax":
-		on, err = G.SoftMax(n, 1)
+		on, err = customSoftMax(n) //G.SoftMax(n, 1) // TODO: my custom softmax seems to be working but gorgonias dosn't. Invistigate more and maybe create an issue.
 	case "leakyrelu":
 		on, err = G.LeakyRelu(n, 0.01)
 	default:
@@ -91,3 +91,27 @@ func (l *ActivationLayer) MustAttach(n *G.Node) *G.Node { return mustAttach(l, n
 
 // Parameters returns a map of the parameters of the layer.
 func (l *ActivationLayer) Parameters() map[string]*G.Node { return make(map[string]*G.Node) }
+
+// This function is designed to be a drop in replacement for G.SoftMax.
+// This is to try and find the dreaded softmax panic.
+// It will also only do stuff on axis 1
+// Also, this is probably slowe than the built in softmax function as it uses mutiple nodes.
+func customSoftMax(x *G.Node) (*G.Node, error) {
+	exponented, err := G.Exp(x)
+	if err != nil {
+		return nil, err
+	}
+	summedExp, err := G.Sum(exponented, 1)
+	if err != nil {
+		return nil, err
+	}
+	summedExp, err = G.Reshape(summedExp, []int{summedExp.Shape()[0], 1})
+	if err != nil {
+		return nil, err
+	}
+	divved, err := G.BroadcastHadamardDiv(exponented, summedExp, []byte{}, []byte{1})
+	if err != nil {
+		return nil, err
+	}
+	return divved, nil
+}
