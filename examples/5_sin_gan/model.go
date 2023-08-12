@@ -52,9 +52,11 @@ func attachDiscriminator(model *K.Model, input *G.Node, isTrainable bool) *G.Nod
 	output = K.Dense(model, n(), 1).MustAttach(output)
 	output = K.Sigmoid(model, n()).MustAttach(output)
 
-	for _, l := range model.Layers {
-		if strings.Contains(l.Name(), "discriminator") {
-			l.SetTrainable(false)
+	if !isTrainable {
+		for _, l := range model.Layers {
+			if strings.Contains(l.Name(), "discriminator") {
+				l.SetTrainable(false)
+			}
 		}
 	}
 	return output
