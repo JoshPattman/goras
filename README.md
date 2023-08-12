@@ -91,6 +91,5 @@ fmt.Println()
 - Currently, batching for training discards the remainder of the last batch (eg batch size 8, 17 elements, will only fit 16 things and the last thing will be discarded).
   - I will fix this once I hear back on an issue https://github.com/gorgonia/gorgonia/issues/204
   - Batching for prediction zero pads but this is a bit wasteful
-- Test and fix softmax and/or CCE
 - Add more callbacks for `Fit`
 - Add a shuffle parameter to fit
