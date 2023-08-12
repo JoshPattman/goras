@@ -85,7 +85,7 @@ fmt.Println()
   - `LSTM`
   - `Deconvolution` - I think I will have to implement this in Gorgonia and pull request it first
   - `Upsampling`
-  - `Embedding`
+  - `Embedding` - This could be done with a dense layer (like in golgi) but i think writing a custom embedding layer would be more efficient.
 - Add `L1` and `L2` regularlization
 - Check if GPU support is working for cuda. I think it should work, but I havn't got round to testing yet.
 - Currently, batching for training discards the remainder of the last batch (eg batch size 8, 17 elements, will only fit 16 things and the last thing will be discarded).
