@@ -13,14 +13,19 @@ var ImageUtils imageUtils = imageUtils{}
 
 type imageUtils struct{}
 
-// ImagesToTensor converts a list of image.Image to a tensor.
-// Every image should have the same number of channels and the same dimensions.
-// TODO : currently this only works for 3 channels. Make it work for b&w images.
-func (imageUtils) ImagesToTensor(imgs []image.Image) T.Tensor {
+// ImagesToTensor converts a list of image.Image to a tensor, with all values between 0 and 1.
+// Every image should have the same dimensions.
+// If toGreyscale is true, only the r channel of the image will be used, and the tensor will have the shape (n, 1, x, y).
+// If toGreyscale is false, the tensor will have the shape (n, 3, x, y).
+func (imageUtils) ImagesToTensor(imgs []image.Image, toGreyscale bool) T.Tensor {
 	xDim, yDim := imgs[0].Bounds().Size().X, imgs[0].Bounds().Size().Y
 	data := []float64{}
+	numChannels := 3
+	if toGreyscale {
+		numChannels = 1
+	}
 	for _, img := range imgs {
-		for channel := 0; channel < 3; channel++ {
+		for channel := 0; channel < numChannels; channel++ {
 			for x := 0; x < xDim; x++ {
 				for y := 0; y < yDim; y++ {
 					r, g, b, _ := img.At(x, y).RGBA()
@@ -39,18 +44,21 @@ func (imageUtils) ImagesToTensor(imgs []image.Image) T.Tensor {
 			}
 		}
 	}
-	return T.New(T.WithShape(len(imgs), 3, xDim, yDim), T.WithBacking(data))
+	return T.New(T.WithShape(len(imgs), numChannels, xDim, yDim), T.WithBacking(data))
 }
 
-// TensorToImages converts a tensor to a list of image.Image.
-// The tensor should have the shape (n, 3, x, y).
-// TODO : currently this only works for 3 channels. Make it work for b&w images.
-func (imageUtils) TensorToImages(tens T.Tensor) []image.Image {
+// TensorToImages converts a tensor with values from 0-1 to a list of image.Image.
+// The tensor should have the shape (n, 3, x, y) if fromGreyscale is false, or (n, 1, x, y) if fromGreyscale is true.
+func (imageUtils) TensorToImages(tens T.Tensor, fromGreyscale bool) []image.Image {
 	xDim, yDim := tens.Shape()[2], tens.Shape()[3]
 	imgs := make([]image.Image, tens.Shape()[0])
+	numChannels := 3
+	if fromGreyscale {
+		numChannels = 1
+	}
 	for i := 0; i < tens.Shape()[0]; i++ {
 		img := image.NewRGBA(image.Rect(0, 0, xDim, yDim))
-		for channel := 0; channel < 3; channel++ {
+		for channel := 0; channel < numChannels; channel++ {
 			for x := 0; x < xDim; x++ {
 				for y := 0; y < yDim; y++ {
 					v, err := tens.At(i, channel, x, y)
@@ -58,16 +66,21 @@ func (imageUtils) TensorToImages(tens T.Tensor) []image.Image {
 					if err != nil {
 						panic(err)
 					}
-					r, g, b, _ := img.At(x, y).RGBA()
-					r, g, b = r>>8, g>>8, b>>8
-					r8, g8, b8 := uint8(r), uint8(g), uint8(b)
-					switch channel {
-					case 0:
-						img.Set(x, y, color.RGBA{uint8(vi * 255), g8, b8, 255})
-					case 1:
-						img.Set(x, y, color.RGBA{r8, uint8(vi * 255), b8, 255})
-					case 2:
-						img.Set(x, y, color.RGBA{r8, g8, uint8(vi * 255), 255})
+					if numChannels == 3 {
+						r, g, b, _ := img.At(x, y).RGBA()
+						r, g, b = r>>8, g>>8, b>>8
+						r8, g8, b8 := uint8(r), uint8(g), uint8(b)
+						switch channel {
+						case 0:
+							img.Set(x, y, color.RGBA{uint8(vi * 255), g8, b8, 255})
+						case 1:
+							img.Set(x, y, color.RGBA{r8, uint8(vi * 255), b8, 255})
+						case 2:
+							img.Set(x, y, color.RGBA{r8, g8, uint8(vi * 255), 255})
+						}
+					} else {
+						vInt := uint8(vi * 255)
+						img.Set(x, y, color.RGBA{vInt, vInt, vInt, 255})
 					}
 				}
 			}
