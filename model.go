@@ -278,6 +278,10 @@ func WithEpochCallback(cb EpochCallback) FitOpt {
 }
 
 func (m *Model) Fit(xs, ys []T.Tensor, solver G.Solver, opts ...FitOpt) error {
+	return m.FitGenerator(NewTTDG(xs, ys), solver, opts...)
+}
+
+func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ...FitOpt) error {
 	params := &fitParams{
 		Epochs:            1,
 		LogEvery:          1,
@@ -289,43 +293,44 @@ func (m *Model) Fit(xs, ys []T.Tensor, solver G.Solver, opts ...FitOpt) error {
 		o(params)
 	}
 	batchSize := m.getCurrentBatchSize()
-	// xBatchess and yBatchess are [batch][inputs]Tensor
-	xBatchess, _, err := batchMultipleTensors(xs, batchSize, false)
-	if err != nil {
-		return err
-	}
-	yBatchess, _, err := batchMultipleTensors(ys, batchSize, false)
-	if err != nil {
-		return err
-	}
 	for epoch := 1; epoch <= params.Epochs; epoch++ {
+		tdg.Reset(batchSize)
+		numBatches := tdg.NumBatches()
 		isLoggingEpoch := ((epoch%params.LogEvery == 0) || (epoch == params.Epochs) || (epoch == 1))
-		logEveryBatch := len(xBatchess) / 100
+		logEveryBatch := numBatches / 100
 		if logEveryBatch == 0 {
 			logEveryBatch = 1
 		}
 		loss := 0.0
-		numBatches := 0.0
-		for bi := range xBatchess {
-			batchLoss, err := m.FitBatch(xBatchess[bi], yBatchess[bi], solver)
+		currentBatches := 0.0
+		bi := 0
+		for {
+			xBatch, yBatch, err := tdg.NextBatch(batchSize)
+			if err != nil {
+				return err
+			}
+			if xBatch == nil || yBatch == nil {
+				break
+			}
+			batchLoss, err := m.FitBatch(xBatch, yBatch, solver)
 			if err != nil {
 				return err
 			}
 			loss += batchLoss
-			numBatches++
+			currentBatches++
 			if params.Verbose && isLoggingEpoch && bi%logEveryBatch == 0 {
-				bar := strings.Repeat("=", int(numBatches/float64(len(xBatchess))*39))
+				bar := strings.Repeat("=", int(currentBatches/float64(numBatches)*39))
 				bar += ">"
-				fmt.Printf("\rEpoch %d/%d - Loss: %f |%-40v|", epoch, params.Epochs, loss/numBatches, bar)
+				fmt.Printf("\rEpoch %d/%d - Loss: %f |%-40v|", epoch, params.Epochs, loss/currentBatches, bar)
 			}
-
+			bi++
 		}
 		if params.Verbose && isLoggingEpoch {
 			lineEnd := "\n"
 			if params.ClearLine {
 				lineEnd = "\r"
 			}
-			fmt.Printf("\rEpoch %d/%d - Loss: %f |Done| %40v%v", epoch, params.Epochs, loss/numBatches, "", lineEnd)
+			fmt.Printf("\rEpoch %d/%d - Loss: %f |Done| %40v%v", epoch, params.Epochs, loss/currentBatches, "", lineEnd)
 		}
 		for _, cb := range params.EpochEndCallbakcs {
 			if err := cb(epoch); err != nil {
