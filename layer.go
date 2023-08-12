@@ -13,6 +13,7 @@ type Layer interface {
 	Type() string                   // This is used for Summary()
 	Node() *G.Node                  // This returns the node used as the main output for this layer
 	INodes() []*G.Node              // This returns all nodes used as inputs to this layer
+	SetTrainable(bool)              // Set if the layer is trainable. Must be done before build
 }
 
 // LayerBase is a struct that all layers should embed.
@@ -50,6 +51,11 @@ func (l *LayerBase) Node() *G.Node {
 // INodes returns the input nodes of this layer.
 func (l *LayerBase) INodes() []*G.Node {
 	return l.InputNodes
+}
+
+// SetTrainable sets if the layer is trainable or not. This MUST be done before Build()
+func (l *LayerBase) SetTrainable(t bool) {
+	l.IsTrainable = t
 }
 
 // Stuff for reducing repetitive code
