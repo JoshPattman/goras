@@ -167,12 +167,12 @@ func MakeModel() *K.Model {
 	outputs = K.Activation(model, n(), "relu").MustAttach(outputs)
 	outputs = K.Dropout(model, n(), 0.55).MustAttach(outputs)
 	outputs = K.Dense(model, n(), 10).MustAttach(outputs)
-	// For now we are using sigmoid as the activation. Softmax would be better but I think at the moment it is broken.
-	outputs = K.Activation(model, n(), "sigmoid").MustAttach(outputs)
+	// We are using softmax as the activation function for the last layer.
+	outputs = K.Activation(model, n(), "softmax").MustAttach(outputs)
 
 	// Build the model
-	// Again, we are using MSE as the loss function. CCE would be better if we were using softmax.
-	model.MustBuild(K.WithInputs(inputs), K.WithOutputs(outputs), K.WithLosses(K.MSE))
+	// This time we will use CCC (Categorical Cross Entropy) as the loss function. This must be used with softmax.
+	model.MustBuild(K.WithInputs(inputs), K.WithOutputs(outputs), K.WithLosses(K.CCE))
 
 	return model
 }
