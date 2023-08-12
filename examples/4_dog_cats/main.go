@@ -38,7 +38,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		imgResized := resizeImage(img, 64, 64)
+		imgResized := K.ImageUtils.ResizeImage(img, 64, 64, "nearest_neighbor")
 		dogImgs = append(dogImgs, imgResized)
 	}
 	fmt.Println("Loaded all dogs images")
@@ -48,7 +48,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		imgResized := resizeImage(img, 64, 64)
+		imgResized := K.ImageUtils.ResizeImage(img, 64, 64, "nearest_neighbor")
 		catImgs = append(catImgs, imgResized)
 	}
 	fmt.Println("Loaded all cats images")
@@ -64,7 +64,7 @@ func main() {
 	}
 
 	// Now convert all the images to T.Tensor. We have structured this tensor so that it goes dog,cat,dog,cat to make sure that each batch has the same number of dogs and cats
-	x, y := imagesToTensor(datasetImgs), T.New(T.WithShape(len(datasetYs), 1), T.WithBacking(datasetYs))
+	x, y := K.ImageUtils.ImagesToTensor(datasetImgs, false), T.New(T.WithShape(len(datasetYs), 1), T.WithBacking(datasetYs))
 	fmt.Println("Converted images to tensors")
 
 	model := MakeModel()
@@ -123,7 +123,7 @@ func main() {
 		testSet = append(testSet, testCats[i])
 		testSet = append(testSet, testDogs[i])
 	}
-	testX := imagesToTensor(testSet)
+	testX := K.ImageUtils.ImagesToTensor(testSet, false)
 	pred, err := model.PredictBatch(K.V(testX))
 	if err != nil {
 		panic(err)
