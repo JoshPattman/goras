@@ -84,7 +84,7 @@ fmt.Println()
   - `Recurrent`
   - `LSTM`
   - `Deconvolution` - I think I will have to implement this in Gorgonia and pull request it first
-  - `Upsampling` - I think I will have to implement this in Gorgonia and pull request it first
+  - `Upsampling`
   - `Embedding`
 - Add `L1` and `L2` regularlization
 - Check if GPU support is working for cuda. I think it should work, but I havn't got round to testing yet.
@@ -93,3 +93,4 @@ fmt.Println()
   - Batching for prediction zero pads but this is a bit wasteful
 - Add more callbacks for `Fit`
 - Add a shuffle parameter to fit
+- Add `SCCE` Loss
