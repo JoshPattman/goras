@@ -1,8 +1,10 @@
 // In this example, we will create a very simple GAN (generative adversarial networks) that will learn to generate points on a sin curve.
 // You should be able to take the principles in this example and apply them to more complex problems, such as generating faces.
+// THIS EXAMPLE DOES NOT WORK YET. I dont think its because of the pacakge, but rather just how i have written the code. I think currently its mode collapse.
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"math/rand"
@@ -21,17 +23,43 @@ func main() {
 	fmt.Println(gen.Summary())
 	fmt.Println(disc.Summary())
 
-	solverG := G.NewAdamSolver(G.WithLearnRate(0.01))
-	solverD := G.NewAdamSolver(G.WithLearnRate(0.01))
+	solverG := G.NewAdamSolver(G.WithLearnRate(0.002))
+	solverD := G.NewAdamSolver(G.WithLearnRate(0.001))
 
-	for i := 0; i < 1000; i++ {
-		trainingStep(full, gen, disc, solverG, solverD)
+	// Train for 1000 steps (1000 batches)
+	steps := 1000000
+	for i := 0; i < steps; i++ {
+		gl, dl := trainingStep(full, gen, disc, solverG, solverD)
+		if i%1000 == 0 {
+			fmt.Printf("%v/%v GL: %.4f    DL %.4f\n", i, steps, gl, dl)
+		}
 	}
+
+	// Generate some latent space data
+	latentData := randomTensor(T.Shape{128, latentDim})
+	generatedY, err := gen.Predict(K.V(latentData))
+	if err != nil {
+		panic(err)
+	}
+	generatedPoints := generatedY[0]
+	xPs := make([]float64, 128)
+	yPs := make([]float64, 128)
+	for i := range xPs {
+		atX, _ := generatedPoints.At(i, 0)
+		atY, _ := generatedPoints.At(i, 1)
+		xPs[i] = atX.(float64)
+		yPs[i] = atY.(float64)
+	}
+	jsx, _ := json.Marshal(xPs)
+	jsy, _ := json.Marshal(yPs)
+
+	fmt.Println("x =", string(jsx))
+	fmt.Println("y =", string(jsy))
 }
 
 // As a GAN requires multiple models, we are going to have to write a custom training step.
 // I might incorporate a GAN training step into Goras one day, but this will do for now.
-func trainingStep(full, gen, disc *K.Model, solverD, solverG G.Solver) {
+func trainingStep(full, gen, disc *K.Model, solverD, solverG G.Solver) (float64, float64) {
 	// We will start by generating a batch of generated samples from the generator
 	// To do this, we need to start by creating a random input tensor of the correct dims (batchSize, latentDim)
 	latentSamples := randomTensor(T.Shape{batchSize, latentDim})
@@ -68,9 +96,12 @@ func trainingStep(full, gen, disc *K.Model, solverD, solverG G.Solver) {
 
 	// Now its time to train the generator.
 	// We will do this by using the full Model. We first generate some more latent space vectors, the pass them thorugh the entire model.
-	// We then set the target output to be 0 (fake) for each element in the batch, and train.
+	// We then set the target output to be 1 (real), as we want the generator to make the discriminator think its outputs are real.
 	generatorX := randomTensor(T.Shape{batchSize, latentDim})
 	generatorYData := make([]float64, batchSize)
+	for i := range generatorYData {
+		generatorYData[i] = 1
+	}
 	generatorY := T.New(T.WithShape(batchSize, 1), T.WithBacking(generatorYData))
 	// Now lets fit
 	genLoss, err := full.FitBatch(K.V(generatorX), K.V(generatorY), solverG)
@@ -78,7 +109,7 @@ func trainingStep(full, gen, disc *K.Model, solverD, solverG G.Solver) {
 		panic(err)
 	}
 
-	fmt.Println(genLoss, discLoss)
+	return genLoss, discLoss
 }
 
 // Generate a random vector with values 0-1
@@ -97,7 +128,7 @@ func randomSinTensor(shape T.Shape) T.Tensor {
 	for i := range data {
 		if i%2 != 0 {
 			// This is a y pos. We also want to make sure its between 0 and 1
-			data[i] = (math.Sin(data[i-1]) + 1) / 2
+			data[i] = (math.Sin(data[i-1]*3.14) + 1) / 2
 		} else {
 			// This is an x pos
 			data[i] = rand.Float64()
