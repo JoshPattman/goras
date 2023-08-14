@@ -41,6 +41,9 @@ func attachGenerator(model *K.Model, input *G.Node) *G.Node {
 	output := K.Dense(model, n(), 25).MustAttach(input)
 	output = K.Sigmoid(model, n()).MustAttach(output)
 	output = K.Dropout(model, n(), 0.2).MustAttach(output)
+	output = K.Dense(model, n(), 25).MustAttach(output)
+	output = K.Sigmoid(model, n()).MustAttach(output)
+	output = K.Dropout(model, n(), 0.2).MustAttach(output)
 	output = K.Dense(model, n(), 2).MustAttach(output)
 	output = K.Sigmoid(model, n()).MustAttach(output)
 	return output
@@ -49,6 +52,9 @@ func attachGenerator(model *K.Model, input *G.Node) *G.Node {
 func attachDiscriminator(model *K.Model, input *G.Node, isTrainable bool) *G.Node {
 	n := K.NewNamer("discriminator")
 	output := K.Dense(model, n(), 25).MustAttach(input)
+	output = K.Sigmoid(model, n()).MustAttach(output)
+	output = K.Dropout(model, n(), 0.2).MustAttach(output)
+	output = K.Dense(model, n(), 25).MustAttach(output)
 	output = K.Sigmoid(model, n()).MustAttach(output)
 	output = K.Dropout(model, n(), 0.2).MustAttach(output)
 	output = K.Dense(model, n(), 1).MustAttach(output)

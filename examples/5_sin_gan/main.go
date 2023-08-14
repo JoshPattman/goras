@@ -27,7 +27,7 @@ func main() {
 	solverD := G.NewAdamSolver(G.WithLearnRate(0.001))
 
 	// Train for 1000 steps (1000 batches)
-	steps := 1000000
+	steps := 100000
 	for i := 0; i < steps; i++ {
 		gl, dl := trainingStep(full, gen, disc, solverG, solverD)
 		if i%1000 == 0 {
