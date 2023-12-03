@@ -1,9 +1,11 @@
-module 4_dogs_cats
+module main
 
-go 1.20
+go 1.21.0
 
 require (
+	github.com/JoshPattman/datautil v0.0.1
 	github.com/JoshPattman/goras v0.1.0
+	github.com/go-gota/gota v0.12.0
 	gorgonia.org/gorgonia v0.9.17
 	gorgonia.org/tensor v0.9.24
 )
@@ -20,11 +22,10 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/xtgo/set v1.0.0 // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20220617031537-928513b29760 // indirect
-	golang.org/x/image v0.0.0-20190227222117-0694c2d4d067 // indirect
+	golang.org/x/image v0.6.0 // indirect
 	golang.org/x/net v0.6.0 // indirect
-	golang.org/x/text v0.12.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	gonum.org/v1/gonum v0.8.2 // indirect
+	gonum.org/v1/gonum v0.14.0 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 	gorgonia.org/cu v0.9.3 // indirect
 	gorgonia.org/dawson v1.2.0 // indirect
