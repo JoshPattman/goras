@@ -95,23 +95,16 @@ func (l *ActivationLayer) Parameters() map[string]*G.Node { return make(map[stri
 // This function is designed to be a drop in replacement for G.SoftMax.
 // This is to try and find the dreaded softmax panic.
 // It will also only do stuff on axis 1
-// Also, this is probably slowe than the built in softmax function as it uses mutiple nodes.
+// Also, this is probably slower than the built in softmax function as it uses mutiple nodes.
 func customSoftMax(x *G.Node) (*G.Node, error) {
-	exponented, err := G.Exp(x)
+	var err error
+	exponentiatedClasses, err := G.Exp(x)
 	if err != nil {
 		return nil, err
 	}
-	summedExp, err := G.Sum(exponented, 1)
+	summedExponentiatedClasses, err := G.Sum(exponentiatedClasses, 1)
 	if err != nil {
 		return nil, err
 	}
-	summedExp, err = G.Reshape(summedExp, []int{summedExp.Shape()[0], 1})
-	if err != nil {
-		return nil, err
-	}
-	divved, err := G.BroadcastHadamardDiv(exponented, summedExp, []byte{}, []byte{1})
-	if err != nil {
-		return nil, err
-	}
-	return divved, nil
+	return G.BroadcastHadamardDiv(exponentiatedClasses, summedExponentiatedClasses, []byte{}, []byte{1})
 }
