@@ -124,10 +124,11 @@ func main() {
 		testSet = append(testSet, testDogs[i])
 	}
 	testX := K.ImageUtils.ImagesToTensor(testSet, false)
-	pred, err := model.PredictBatch(K.V(testX))
+	preds, err := model.PredictBatch(K.V(testX))
 	if err != nil {
 		panic(err)
 	}
+	pred := preds[0] // We are not using mutiple outputs, so we can just take the first one which is our one and only output
 	for i := range testSet {
 		predVal, err := pred.At(i, 0)
 		if err != nil {

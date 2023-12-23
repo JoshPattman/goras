@@ -191,7 +191,7 @@ func (m *Model) BindParamsFrom(m1 *Model) error {
 func V(ts ...T.Tensor) []T.Tensor { return ts }
 
 // PredictBatch runs the model on a batch of input data. The batch size must match the input node shape.
-func (m *Model) PredictBatch(inputs []T.Tensor) (*T.Dense, error) {
+func (m *Model) PredictBatch(inputs []T.Tensor) ([]*T.Dense, error) {
 	if len(inputs) != len(m.InputNodes) {
 		return nil, fmt.Errorf("number of inputs (%v) must be the same as number of input nodes (%v)", len(inputs), len(m.InputNodes))
 	}
@@ -211,7 +211,7 @@ func (m *Model) PredictBatch(inputs []T.Tensor) (*T.Dense, error) {
 		return nil, err
 	}
 	// We need to clone here otherwise the next time the machine is run, the tensor will be changed
-	return T.New(T.WithShape(m.OutputValue.Shape()...), T.WithBacking(m.OutputValue.Data())).Clone().(*T.Dense), nil
+	return []*T.Dense{T.New(T.WithShape(m.OutputValue.Shape()...), T.WithBacking(m.OutputValue.Data())).Clone().(*T.Dense)}, nil
 }
 
 // FitBatch runs the model on a batch of input data, and then trains the model on the target data.
@@ -353,10 +353,11 @@ func (m *Model) Predict(xs []T.Tensor) ([]T.Tensor, error) {
 	yBatchess := make([][]T.Tensor, len(xBatchess))
 	for bi := range xBatchess {
 		var yBatch T.Tensor
-		yBatch, err := m.PredictBatch(xBatchess[bi])
+		yBatchs, err := m.PredictBatch(xBatchess[bi])
 		if err != nil {
 			return nil, err
 		}
+		yBatch = yBatchs[0]
 		if bi == len(xBatchess)-1 {
 			yBatch, err = sliceBatch(yBatch, T.S(0, yBatch.Shape()[0]-numPads))
 			if err != nil {
