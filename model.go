@@ -488,13 +488,6 @@ func sliceBatch(t T.Tensor, slice T.Slice) (T.Tensor, error) {
 	return st, nil
 }
 
-func ensureCorrectBatchSize(batchData T.Tensor, batchSize int) error {
-	if batchData.Shape()[0] != batchSize {
-		return fmt.Errorf("incorrect batch size - expected %d, got %d", batchSize, batchData.Shape()[0])
-	}
-	return nil
-}
-
 func (m *Model) Summary() string {
 	s := ""
 	s += "================== Inputs ===================\n"
