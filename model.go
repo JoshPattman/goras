@@ -496,7 +496,16 @@ func ensureCorrectBatchSize(batchData T.Tensor, batchSize int) error {
 
 func (m *Model) Summary() string {
 	s := ""
+	s += "================== Inputs ===================\n"
+	for name, node := range m.InputNodes {
+		s += fmt.Sprintf("Input       %-20v          Shape: %-20v\n", name, fmt.Sprint(node.Shape()))
+	}
+	s += "================== Outputs ==================\n"
+	for name, node := range m.OutputNodes {
+		s += fmt.Sprintf("Output      %-20v          Shape: %-20v\n", name, fmt.Sprint(node.Shape()))
+	}
 	totalParams := 0
+	s += "============= Registered Layers =============\n"
 	for li := range m.Layers {
 		reqs := make([]string, 0)
 		for _, r := range m.Layers[li].INodes() {
@@ -512,6 +521,7 @@ func (m *Model) Summary() string {
 			fmt.Sprint(m.Layers[li].Node().Shape()),
 			reqs, numParams)
 	}
+	s += "=================== Stats ===================\n"
 	s += fmt.Sprintf("Total number of parameters: %v\n", totalParams)
 	return s
 }
