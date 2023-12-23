@@ -192,10 +192,7 @@ func V(ts ...T.Tensor) []T.Tensor { return ts }
 
 // PredictBatch runs the model on a batch of input data. The batch size must match the input node shape.
 func (m *Model) PredictBatch(inputs []T.Tensor) ([]*T.Dense, error) {
-	if len(inputs) != len(m.InputNodes) {
-		return nil, fmt.Errorf("number of inputs (%v) must be the same as number of input nodes (%v)", len(inputs), len(m.InputNodes))
-	}
-	if err := ensureCorrectBatchSize(inputs[0], m.getCurrentBatchSize()); err != nil {
+	if err := checkBatchedInputShapes(m, inputs); err != nil {
 		return nil, err
 	}
 	m.Machine.Reset()
@@ -222,10 +219,8 @@ func (m *Model) FitBatch(inputs, targets []T.Tensor, solver G.Solver) (float64, 
 		return 0, fmt.Errorf("number of targets must be 1 at this time")
 	}
 	target := targets[0]
-	for _, inp := range inputs {
-		if err := ensureCorrectBatchSize(inp, m.getCurrentBatchSize()); err != nil {
-			return 0, err
-		}
+	if err := checkBatchedInputShapes(m, inputs); err != nil {
+		return 0, err
 	}
 	m.Machine.Reset()
 	for i := range inputs {
@@ -406,9 +401,9 @@ func batchMultipleTensors(inputs []T.Tensor, batchSize int, zeroPad bool) ([][]T
 	if remainder != 0 {
 		if zeroPad {
 			// Pad the inputs so the remainder is part of a batch
-			paddingShape := append([]int{numNeededBatch}, paddedInputs[0].Shape()[1:]...)
-			padding := T.New(T.WithShape(paddingShape...), T.Of(paddedInputs[0].Dtype()))
 			for i := range paddedInputs {
+				paddingShape := append([]int{numNeededBatch}, paddedInputs[i].Shape()[1:]...)
+				padding := T.New(T.WithShape(paddingShape...), T.Of(paddedInputs[i].Dtype()))
 				var err error
 				paddedInputs[i], err = T.Concat(0, paddedInputs[i], padding)
 				if err != nil {
