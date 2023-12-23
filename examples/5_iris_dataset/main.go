@@ -1,3 +1,5 @@
+// IMPORTANT - currently using outdated api - look at 1_xor for updated api ref. Most of this eg is still valid tho.
+
 // This file demonstrates how to do regression on the iris dataset using goras.
 // It does not explain stuff as much as the earlier tutorials, so it's probably best to read them first.
 package main

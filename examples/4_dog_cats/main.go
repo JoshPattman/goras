@@ -1,3 +1,5 @@
+// IMPORTANT - currently using outdated api - look at 1_xor for updated api ref. Most of this eg is still valid tho.
+
 // This example uses a convolutional neural network like the previous one, but this time to classify if an image is a dog or a cat.
 // We will be using quite a big dataset, which you can either get from:
 //

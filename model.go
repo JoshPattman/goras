@@ -498,6 +498,10 @@ func (m *Model) Summary() string {
 	for name, node := range m.OutputNodes {
 		s += fmt.Sprintf("Output      %-20v          Shape: %-20v\n", name, fmt.Sprint(node.Shape()))
 	}
+	s += "================= Loss Reqs =================\n"
+	for name, node := range m.LossRequiredNodes {
+		s += fmt.Sprintf("Loss Req    %-20v          Shape: %-20v\n", name, fmt.Sprint(node.Shape()))
+	}
 	totalParams := 0
 	s += "============= Registered Layers =============\n"
 	for li := range m.Layers {

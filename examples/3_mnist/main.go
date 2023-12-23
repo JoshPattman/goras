@@ -1,3 +1,5 @@
+// IMPORTANT - currently using outdated api - look at 1_xor for updated api ref. Most of this eg is still valid tho.
+
 // In this example, we create a model to classify MNIST digits.
 // It uses convolution2d and maxpool2d layers, and it is a similar underlying model as https://gorgonia.org/tutorials/mnist/
 // the only difference being that this model uses fewer conv filters and a smaller dense layer, for speed purposes.
