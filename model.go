@@ -218,12 +218,14 @@ func (m *Model) PredictBatch(inputs []T.Tensor) ([]*T.Dense, error) {
 // The solver used is passed in as an argument.
 // IMPORTANT NOTE: Currently, when the data is batched, the last batch of data will be discarded if the x size does not evenly divide the batch size.
 func (m *Model) FitBatch(inputs, targets []T.Tensor, solver G.Solver) (float64, error) {
-	if len(inputs) != 1 || len(targets) != 1 {
-		return 0, fmt.Errorf("number of inputs and targets must be 1 at this time")
+	if len(targets) != 1 {
+		return 0, fmt.Errorf("number of targets must be 1 at this time")
 	}
 	target := targets[0]
-	if err := ensureCorrectBatchSize(inputs[0], m.getCurrentBatchSize()); err != nil {
-		return 0, err
+	for _, inp := range inputs {
+		if err := ensureCorrectBatchSize(inp, m.getCurrentBatchSize()); err != nil {
+			return 0, err
+		}
 	}
 	m.Machine.Reset()
 	for i := range inputs {
