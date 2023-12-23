@@ -357,7 +357,7 @@ func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ..
 }
 
 // Predict returns the models outputs for the given inputs. It cuts the inputs into batches so the inputs can be of any length.
-func (m *Model) Predict(xs map[string]T.Tensor) ([]T.Tensor, error) {
+func (m *Model) Predict(xs map[string]T.Tensor) (map[string]T.Tensor, error) {
 	xBatchess, numPads, err := batchMultipleTensors(xs, m.getCurrentBatchSize(), true)
 	if err != nil {
 		return nil, err
@@ -379,17 +379,18 @@ func (m *Model) Predict(xs map[string]T.Tensor) ([]T.Tensor, error) {
 		}
 		yBatchess[bi] = yBatches
 	}
-	ys := make([]T.Tensor, 0)
-	for i := range yBatchess[0] {
+	// Concatenate the batches back together
+	ys := make(map[string]T.Tensor, 0)
+	for name := range yBatchess[0] {
 		batchesForOutput := make([]T.Tensor, 0)
 		for batch := range yBatchess {
-			batchesForOutput = append(batchesForOutput, yBatchess[batch][i])
+			batchesForOutput = append(batchesForOutput, yBatchess[batch][name])
 		}
 		y, err := T.Concat(0, batchesForOutput[0], batchesForOutput[1:]...)
 		if err != nil {
 			return nil, err
 		}
-		ys = append(ys, y)
+		ys[name] = y
 
 	}
 	return ys, nil
