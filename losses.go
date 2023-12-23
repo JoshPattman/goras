@@ -15,7 +15,7 @@ type LossFunc func() (lossOut *G.Node, lossInps map[string]*G.Node, err error)
 
 func MSELoss(targetName string, output *G.Node) LossFunc {
 	return func() (*G.Node, map[string]*G.Node, error) {
-		target := G.NewMatrix(output.Graph(), G.Float64, G.WithShape(1, 1))
+		target := G.NewMatrix(output.Graph(), G.Float64, G.WithShape(output.Shape()...))
 		x, err := G.Sub(output, target)
 		if err != nil {
 			return nil, nil, err

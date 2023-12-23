@@ -63,14 +63,33 @@ func valAtLeastNDims(n int) shapeValidator {
 	}
 }
 
-func checkBatchedInputShapes(m *Model, inps []tensor.Tensor) error {
+func checkBatchedInputShapes(m *Model, inps map[string]tensor.Tensor) error {
 	if len(inps) != len(m.InputNodes) {
 		return fmt.Errorf("incorrect number of inputs. expected %v but got %v", len(m.InputNodes), len(inps))
 	}
 
-	for i := range inps {
-		if !exactShapeEq(m.InputNodes[i].Shape(), inps[i].Shape()) {
-			return fmt.Errorf("input %v had incorrect shape. expected %v but got %v", i, m.InputNodes[i].Shape(), inps[i].Shape())
+	for name := range inps {
+		if _, ok := m.InputNodes[name]; !ok {
+			return fmt.Errorf("input %v not found in model", name)
+		}
+		if !exactShapeEq(m.InputNodes[name].Shape(), inps[name].Shape()) {
+			return fmt.Errorf("input %v had incorrect shape. expected %v but got %v", name, m.InputNodes[name].Shape(), inps[name].Shape())
+		}
+	}
+	return nil
+}
+
+func checkBatchedLossRequirementShapes(m *Model, outs map[string]tensor.Tensor) error {
+	if len(outs) != len(m.LossRequiredNodes) {
+		return fmt.Errorf("incorrect number of loss requirements. expected %v but got %v", len(m.LossRequiredNodes), len(outs))
+	}
+
+	for name := range outs {
+		if _, ok := m.LossRequiredNodes[name]; !ok {
+			return fmt.Errorf("loss requirement %v not found in model", name)
+		}
+		if !exactShapeEq(m.LossRequiredNodes[name].Shape(), outs[name].Shape()) {
+			return fmt.Errorf("input %v had incorrect shape. expected %v but got %v", name, m.LossRequiredNodes[name].Shape(), outs[name].Shape())
 		}
 	}
 	return nil

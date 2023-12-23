@@ -14,15 +14,15 @@ import (
 // a machine which can be used to run the graph,
 // and refrences to input, output and loss nodes.
 type Model struct {
-	Graph            *G.ExprGraph
-	Layers           []Layer
-	Machine          G.VM
-	InputNodes       []*G.Node
-	OutputNode       *G.Node
-	OutputValue      G.Value
-	LossValue        G.Value
-	TargetOutputNode *G.Node
-	DType            T.Dtype
+	Graph             *G.ExprGraph
+	Layers            []Layer
+	Machine           G.VM
+	InputNodes        map[string]*G.Node
+	OutputNodes       map[string]*G.Node
+	OutputValues      map[string]*G.Value // This is deliberately a ref because i think maps are scary
+	LossValue         G.Value
+	LossRequiredNodes map[string]*G.Node
+	DType             T.Dtype
 }
 
 // NewModel creates a new model with no layers
@@ -36,55 +36,59 @@ func (m *Model) AddLayer(l Layer) {
 }
 
 type buildParams struct {
-	inputNodes  []*G.Node
-	outputNodes []*G.Node
-	losses      []func(*G.Node, *G.Node) (*G.Node, error)
+	inputNodes  map[string]*G.Node
+	outputNodes map[string]*G.Node
+	loss        LossFunc
 }
 type BuildOpts func(*buildParams)
 
-func WithInputs(inputNodes ...*G.Node) BuildOpts {
-	return func(b *buildParams) { b.inputNodes = inputNodes }
+func WithInput(inputName string, inputNode *G.Node) BuildOpts {
+	return func(b *buildParams) { b.inputNodes[inputName] = inputNode }
 }
 
-func WithOutputs(outputNodes ...*G.Node) BuildOpts {
-	return func(b *buildParams) { b.outputNodes = outputNodes }
+func WithOutput(name string, outputNode *G.Node) BuildOpts {
+	return func(b *buildParams) { b.outputNodes[name] = outputNode }
 }
 
-func WithLosses(losses ...func(*G.Node, *G.Node) (*G.Node, error)) BuildOpts {
-	return func(b *buildParams) { b.losses = losses }
+func WithLoss(loss LossFunc) BuildOpts {
+	return func(b *buildParams) { b.loss = loss }
 }
 
 // Build builds the model, using a specified input and output node.
 // It adds the loss function to the graph, and creates the machine.
 // This should only be called once per model.
 func (m *Model) Build(opts ...BuildOpts) error {
-	buildParams := &buildParams{}
+	buildParams := &buildParams{
+		inputNodes:  make(map[string]*G.Node),
+		outputNodes: make(map[string]*G.Node),
+	}
 	for _, opt := range opts {
 		opt(buildParams)
 	}
-	if buildParams.inputNodes == nil || buildParams.outputNodes == nil || buildParams.losses == nil {
-		return fmt.Errorf("inputNodes, outputNodes and losses must be specified")
+	if len(buildParams.inputNodes) == 0 || len(buildParams.outputNodes) == 0 {
+		return fmt.Errorf("must at least have one input and output node")
 	}
-	if len(buildParams.outputNodes) != len(buildParams.losses) {
-		return fmt.Errorf("outputNodes and losses must be the same length")
-	}
-	// For now, until i figure out multiple inputs and outputs, ensure there is examtly one input and output
-	if len(buildParams.outputNodes) != 1 {
-		return fmt.Errorf("only one output is supported at this time, this will change soon")
+	if buildParams.loss == nil {
+		return fmt.Errorf("loss must be specified")
 	}
 
 	// Store input and output nodes
 	m.InputNodes = buildParams.inputNodes
-	m.OutputNode = buildParams.outputNodes[0]
-	// Read the output to a value
-	G.Read(m.OutputNode, &m.OutputValue)
+	m.OutputNodes = buildParams.outputNodes
+	// Read the outputs to values
+	m.OutputValues = make(map[string]*G.Value, len(m.OutputNodes))
+	for name := range m.OutputNodes {
+		var val G.Value
+		G.Read(m.OutputNodes[name], &val)
+		m.OutputValues[name] = &val
+	}
 	// Define loss function
-	m.TargetOutputNode = G.NewMatrix(m.Graph, m.DType, G.WithShape(m.OutputNode.Shape()...))
-	lossNode, err := buildParams.losses[0](m.OutputNode, m.TargetOutputNode)
+	lossNode, lossRequiredNodes, err := buildParams.loss()
 	if err != nil {
 		return err
 	}
 	G.Read(lossNode, &m.LossValue)
+	m.LossRequiredNodes = lossRequiredNodes
 	_, err = G.Grad(lossNode, m.Trainables()...)
 	if err != nil {
 		return err
@@ -187,49 +191,58 @@ func (m *Model) BindParamsFrom(m1 *Model) error {
 	return nil
 }
 
-// V is a helper function to create a slice of tensors. It should be used when providing a model with input and target data.
-func V(ts ...T.Tensor) []T.Tensor { return ts }
-
 // PredictBatch runs the model on a batch of input data. The batch size must match the input node shape.
-func (m *Model) PredictBatch(inputs []T.Tensor) ([]*T.Dense, error) {
+func (m *Model) PredictBatch(inputs map[string]T.Tensor) (map[string]T.Tensor, error) {
 	if err := checkBatchedInputShapes(m, inputs); err != nil {
 		return nil, err
 	}
 	m.Machine.Reset()
-	for i := range inputs {
-		if err := G.Let(m.InputNodes[i], inputs[i]); err != nil {
+	for name := range inputs {
+		if err := G.Let(m.InputNodes[name], inputs[name]); err != nil {
 			return nil, err
 		}
 	}
-	if err := G.Let(m.TargetOutputNode, T.New(T.WithShape(m.TargetOutputNode.Shape()...), T.Of(m.DType))); err != nil {
-		return nil, err
+	// Set every loss required node to a tensor of the correct shape
+	for _, n := range m.LossRequiredNodes {
+		if err := G.Let(n, T.New(T.WithShape(n.Shape()...), T.Of(m.DType))); err != nil {
+			return nil, err
+		}
 	}
+	// Run the machine
 	if err := m.Machine.RunAll(); err != nil {
 		return nil, err
 	}
 	// We need to clone here otherwise the next time the machine is run, the tensor will be changed
-	return []*T.Dense{T.New(T.WithShape(m.OutputValue.Shape()...), T.WithBacking(m.OutputValue.Data())).Clone().(*T.Dense)}, nil
+	outputTensors := make(map[string]T.Tensor, len(m.OutputNodes))
+	for name := range m.OutputValues {
+		outputTensors[name] = T.New(
+			T.WithShape((*m.OutputValues[name]).Shape()...),
+			T.WithBacking((*m.OutputValues[name]).Data()),
+		).Clone().(*T.Dense)
+	}
+	return outputTensors, nil
 }
 
 // FitBatch runs the model on a batch of input data, and then trains the model on the target data.
 // The solver used is passed in as an argument.
 // IMPORTANT NOTE: Currently, when the data is batched, the last batch of data will be discarded if the x size does not evenly divide the batch size.
-func (m *Model) FitBatch(inputs, targets []T.Tensor, solver G.Solver) (float64, error) {
-	if len(targets) != 1 {
-		return 0, fmt.Errorf("number of targets must be 1 at this time")
-	}
-	target := targets[0]
+func (m *Model) FitBatch(inputs, lossRequirements map[string]T.Tensor, solver G.Solver) (float64, error) {
 	if err := checkBatchedInputShapes(m, inputs); err != nil {
 		return 0, err
 	}
+	if err := checkBatchedLossRequirementShapes(m, lossRequirements); err != nil {
+		return 0, err
+	}
 	m.Machine.Reset()
-	for i := range inputs {
-		if err := G.Let(m.InputNodes[i], inputs[i]); err != nil {
+	for name := range inputs {
+		if err := G.Let(m.InputNodes[name], inputs[name]); err != nil {
 			return 0, err
 		}
 	}
-	if err := G.Let(m.TargetOutputNode, target); err != nil {
-		return 0, err
+	for name := range lossRequirements {
+		if err := G.Let(m.LossRequiredNodes[name], lossRequirements[name]); err != nil {
+			return 0, err
+		}
 	}
 	if err := m.Machine.RunAll(); err != nil {
 		return 0, err
@@ -243,6 +256,8 @@ func (m *Model) FitBatch(inputs, targets []T.Tensor, solver G.Solver) (float64, 
 		loss = m.LossValue.Data().(float64)
 	case T.Float32:
 		loss = float64(m.LossValue.Data().(float32))
+	default:
+		return 0, fmt.Errorf("unsupported loss dtype %v, please use either float64 or float32", m.DType)
 	}
 	return loss, nil
 }
@@ -274,7 +289,7 @@ func WithEpochCallback(cb EpochCallback) FitOpt {
 	return func(p *fitParams) { p.EpochEndCallbakcs = append(p.EpochEndCallbakcs, cb) }
 }
 
-func (m *Model) Fit(xs, ys []T.Tensor, solver G.Solver, opts ...FitOpt) error {
+func (m *Model) Fit(xs, ys map[string]T.Tensor, solver G.Solver, opts ...FitOpt) error {
 	return m.FitGenerator(NewTTDG(xs, ys), solver, opts...)
 }
 
@@ -342,26 +357,27 @@ func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ..
 }
 
 // Predict returns the models outputs for the given inputs. It cuts the inputs into batches so the inputs can be of any length.
-func (m *Model) Predict(xs []T.Tensor) ([]T.Tensor, error) {
+func (m *Model) Predict(xs map[string]T.Tensor) ([]T.Tensor, error) {
 	xBatchess, numPads, err := batchMultipleTensors(xs, m.getCurrentBatchSize(), true)
 	if err != nil {
 		return nil, err
 	}
-	yBatchess := make([][]T.Tensor, len(xBatchess))
+	yBatchess := make([]map[string]T.Tensor, len(xBatchess))
 	for bi := range xBatchess {
-		var yBatch T.Tensor
-		yBatchs, err := m.PredictBatch(xBatchess[bi])
+		yBatches, err := m.PredictBatch(xBatchess[bi])
 		if err != nil {
 			return nil, err
 		}
-		yBatch = yBatchs[0]
+		// Remove padding
 		if bi == len(xBatchess)-1 {
-			yBatch, err = sliceBatch(yBatch, T.S(0, yBatch.Shape()[0]-numPads))
-			if err != nil {
-				return nil, err
+			for name := range yBatches {
+				yBatches[name], err = sliceBatch(yBatches[name], T.S(0, yBatches[name].Shape()[0]-numPads))
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
-		yBatchess[bi] = []T.Tensor{yBatch}
+		yBatchess[bi] = yBatches
 	}
 	ys := make([]T.Tensor, 0)
 	for i := range yBatchess[0] {
@@ -380,32 +396,42 @@ func (m *Model) Predict(xs []T.Tensor) ([]T.Tensor, error) {
 }
 
 func (m *Model) getCurrentBatchSize() int {
-	return m.InputNodes[0].Shape()[0]
+	for _, n := range m.InputNodes {
+		return n.Shape()[0]
+	}
+	panic("this shouldn't be possible to reach, do you have no input nodes for some reason?")
 }
 
 // Creates a list of batches from the data. The data is a slice of tensors, representing multiple inputs.
 // If zeroPadding is true, the last batch will be padded with zeros if it is smaller than the batch size.
 // If zeroPadding is false, the last batch will be discarded if it is smaller than the batch size.
 // Takes input [input_num]Tensor and returns [batch][input_num]Tensor
-func batchMultipleTensors(inputs []T.Tensor, batchSize int, zeroPad bool) ([][]T.Tensor, int, error) {
-	numRows := inputs[0].Shape()[0]
+func batchMultipleTensors(inputs map[string]T.Tensor, batchSize int, zeroPad bool) ([]map[string]T.Tensor, int, error) {
+	numRows := -1
+	for _, input := range inputs {
+		if numRows == -1 {
+			numRows = input.Shape()[0]
+		} else if numRows != input.Shape()[0] {
+			return nil, 0, fmt.Errorf("all inputs must have the same number of rows")
+		}
+	}
 	remainder := numRows % batchSize
 	numNeededBatch := batchSize - remainder
 	if remainder == 0 {
 		numNeededBatch = 0
 	}
 	// We need to copy so we dont modify the inputs array. This does not do tensor copying, just the slice
-	paddedInputs := make([]T.Tensor, len(inputs))
-	copy(paddedInputs, inputs)
+	paddedInputs := make(map[string]T.Tensor, len(inputs))
+	copyMap(paddedInputs, inputs)
 	// If we have a number of inputs that does not perfectly fit, either pad or cut off the remainder
 	if remainder != 0 {
 		if zeroPad {
 			// Pad the inputs so the remainder is part of a batch
-			for i := range paddedInputs {
-				paddingShape := append([]int{numNeededBatch}, paddedInputs[i].Shape()[1:]...)
-				padding := T.New(T.WithShape(paddingShape...), T.Of(paddedInputs[i].Dtype()))
+			for name := range paddedInputs {
+				paddingShape := append([]int{numNeededBatch}, paddedInputs[name].Shape()[1:]...)
+				padding := T.New(T.WithShape(paddingShape...), T.Of(paddedInputs[name].Dtype()))
 				var err error
-				paddedInputs[i], err = T.Concat(0, paddedInputs[i], padding)
+				paddedInputs[name], err = T.Concat(0, paddedInputs[name], padding)
 				if err != nil {
 					return nil, 0, err
 				}
@@ -421,17 +447,22 @@ func batchMultipleTensors(inputs []T.Tensor, batchSize int, zeroPad bool) ([][]T
 			}
 		}
 	}
-	var batchedInputs [][]T.Tensor
-	numBatches := paddedInputs[0].Shape()[0] / batchSize
+	var batchedInputs []map[string]T.Tensor
+	numPaddedRows := -1
+	for _, input := range paddedInputs {
+		numPaddedRows = input.Shape()[0]
+		break
+	}
+	numBatches := numPaddedRows / batchSize
 	for batchI := 0; batchI < numBatches; batchI += 1 {
-		var batch []T.Tensor
-		for _, input := range paddedInputs {
+		var batch map[string]T.Tensor
+		for inputName, input := range paddedInputs {
 			batchStart := batchI * batchSize
 			slice, err := sliceBatch(input, T.S(batchStart, batchStart+batchSize))
 			if err != nil {
 				panic(err) // TODO - handle this error
 			}
-			batch = append(batch, slice)
+			batch[inputName] = slice
 		}
 		batchedInputs = append(batchedInputs, batch)
 	}
