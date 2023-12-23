@@ -455,7 +455,7 @@ func batchMultipleTensors(inputs map[string]T.Tensor, batchSize int, zeroPad boo
 	}
 	numBatches := numPaddedRows / batchSize
 	for batchI := 0; batchI < numBatches; batchI += 1 {
-		var batch map[string]T.Tensor
+		batch := map[string]T.Tensor{}
 		for inputName, input := range paddedInputs {
 			batchStart := batchI * batchSize
 			slice, err := sliceBatch(input, T.S(batchStart, batchStart+batchSize))
