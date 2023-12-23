@@ -4,6 +4,34 @@ import (
 	G "gorgonia.org/gorgonia"
 )
 
+// LossFunc is a function that when called, returns:
+//
+// - a node (loss output scalar)
+//
+// - a map of nodes which the loss requires to be created (for instance, this is usually the target for the output layer)
+//
+// - an error
+type LossFunc func() (lossOut *G.Node, lossInps map[string]*G.Node, err error)
+
+func MSELoss(targetName string, output *G.Node) LossFunc {
+	return func() (*G.Node, map[string]*G.Node, error) {
+		target := G.NewMatrix(output.Graph(), G.Float64, G.WithShape(1, 1))
+		x, err := G.Sub(output, target)
+		if err != nil {
+			return nil, nil, err
+		}
+		x, err = G.Square(x)
+		if err != nil {
+			return nil, nil, err
+		}
+		x, err = G.Mean(x)
+		if err != nil {
+			return nil, nil, err
+		}
+		return x, map[string]*G.Node{targetName: target}, nil
+	}
+}
+
 // MSE creates the nodes to calculate mean squared error loss between a predicted and target node.
 // It should be used when using Model.Build().
 func MSE(output, target *G.Node) (*G.Node, error) {
