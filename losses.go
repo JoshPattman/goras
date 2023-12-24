@@ -1,7 +1,10 @@
 package goras
 
 import (
+	"fmt"
+
 	G "gorgonia.org/gorgonia"
+	"gorgonia.org/tensor"
 )
 
 // LossFunc is a function that when called, returns:
@@ -104,4 +107,88 @@ func CCELoss(targetName string, output *G.Node) LossFunc {
 		}
 		return x, map[string]*G.Node{targetName: target}, nil
 	}
+}
+
+func L2Loss(layers ...Layer) LossFunc {
+	return func() (*G.Node, map[string]*G.Node, error) {
+		if len(layers) == 0 {
+			return nil, nil, fmt.Errorf("no layers provided to L2Loss")
+		}
+		// get a list of all trainable parameters
+		var params []*G.Node
+		for _, layer := range layers {
+			for _, param := range layer.Parameters() {
+				params = append(params, param)
+			}
+		}
+		var sumNodes []*G.Node
+		for _, param := range params {
+			x, err := G.Square(param)
+			if err != nil {
+				return nil, nil, err
+			}
+			x, err = G.Sum(x, allAxes(param.Shape())...)
+			if err != nil {
+				return nil, nil, err
+			}
+			sumNodes = append(sumNodes, x)
+		}
+		total := sumNodes[0]
+		for _, node := range sumNodes[1:] {
+			var err error
+			total, err = G.Add(total, node)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+		return total, map[string]*G.Node{}, nil
+	}
+}
+
+func WeightedAdditiveLoss(losses []LossFunc, weights []float64) LossFunc {
+	return func() (*G.Node, map[string]*G.Node, error) {
+		if len(losses) != len(weights) {
+			return nil, nil, fmt.Errorf("number of losses and weights must match")
+		}
+		lossNodes := []*G.Node{}
+		allLossInps := map[string]*G.Node{}
+		for _, loss := range losses {
+			lossNode, lossInp, err := loss()
+			if err != nil {
+				return nil, nil, err
+			}
+			lossNodes = append(lossNodes, lossNode)
+			for k, v := range lossInp {
+				if _, ok := allLossInps[k]; ok {
+					return nil, nil, fmt.Errorf("loss with name %s already exists", k)
+				}
+				allLossInps[k] = v
+			}
+		}
+		var total *G.Node
+		for i, lossNode := range lossNodes {
+			scaleNode := G.NewConstant(weights[i])
+			x, err := G.Mul(lossNode, scaleNode)
+			if err != nil {
+				return nil, nil, err
+			}
+			if total == nil {
+				total = x
+			} else {
+				total, err = G.Add(total, x)
+				if err != nil {
+					return nil, nil, err
+				}
+			}
+		}
+		return total, allLossInps, nil
+	}
+}
+
+func allAxes(shape tensor.Shape) []int {
+	axes := make([]int, shape.Dims())
+	for i := range axes {
+		axes[i] = i
+	}
+	return axes
 }
