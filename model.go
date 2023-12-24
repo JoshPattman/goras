@@ -204,7 +204,7 @@ func (m *Model) PredictBatch(inputs map[string]T.Tensor) (map[string]T.Tensor, e
 	}
 	// Set every loss required node to a tensor of the correct shape
 	for _, n := range m.LossRequiredNodes {
-		if err := G.Let(n, T.New(T.WithShape(n.Shape()...), T.Of(m.DType))); err != nil {
+		if err := G.Let(n, T.New(T.WithShape(n.Shape()...), T.Of(n.Dtype()))); err != nil {
 			return nil, err
 		}
 	}
