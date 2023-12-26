@@ -14,7 +14,7 @@ This is very much an unstable package. I am still trying to figure out how every
 - Supports many types of layers including Dense, Convolution2D, and MaxPooling2D
   - I plan to add support for LSTM and MHA layers in the future
 ## Examples
-See the examples directory for some full examples. More coming soon! Watch out at the moment though as some of the examples use the old api, and do not work.
+See the examples directory for some full examples. More coming soon!
 ## Todo
 - Add these layers
   - `Recurrent`
