@@ -43,26 +43,26 @@ func main() {
 	out = goras.Softmax(model, "activation").MustAttach(out)
 
 	// Build the model with CCE loss.
-	model.MustBuild(goras.WithInputs(inp), goras.WithOutputs(out), goras.WithLosses(goras.CCE))
+	model.MustBuild(goras.WithInput("x", inp), goras.WithOutput("y", out), goras.WithLoss(goras.CCELoss("yt", out)))
 
 	// Print a summary of the model
 	fmt.Println(model.Summary())
 
 	// Fit the model with an Adam solver and 500 epochs.
 	solver := gorgonia.NewAdamSolver(gorgonia.WithLearnRate(0.02))
-	err := model.Fit(goras.V(X), goras.V(Y), solver, goras.WithEpochs(500), goras.WithLoggingEvery(50))
+	err := model.Fit(goras.NamedTs{"x": X}, goras.NamedTs{"yt": Y}, solver, goras.WithEpochs(500), goras.WithLoggingEvery(50))
 	if err != nil {
 		panic(err)
 	}
 
 	// Print the predictions of the model (this is measured on the training set, it would be better practice to do this on an unseen test set)
-	py, _ := model.Predict(goras.V(X))
+	py, _ := model.Predict(goras.NamedTs{"x": X})
 
 	correct := 0
 	for i := 0; i < 30; i++ {
 		xi, _ := X.Slice(tensor.S(i))
 		yi, _ := Y.Slice(tensor.S(i))
-		pyi, _ := py[0].Slice(tensor.S(i))
+		pyi, _ := py["y"].Slice(tensor.S(i))
 		classNames := []string{"\033[0;101mIris-virginica\033[0m", "\033[0;102mIris-setosa\033[0m", "\033[0;103mIris-versicolor\033[0m"}
 		classI, _ := tensor.Argmax(pyi, 0)
 		aclassI, _ := tensor.Argmax(yi, 0)

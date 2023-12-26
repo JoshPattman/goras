@@ -13,7 +13,7 @@ import (
 	T "gorgonia.org/tensor"
 )
 
-// We will define a dtype. Float32 in theory should be faster than Float64 but I haven't seen much difference. It does also occupy less memory though.
+// We will define a dtype. Float32 occupies less memory than Float64.
 var dType = T.Float32
 
 func main() {
@@ -53,7 +53,7 @@ func main() {
 	// For exemplar purposes, we also save the model parameters after each epoch using a callback.
 	// You can also write your own callbacks very simply by making a function `func (epoch int) error`.
 	fitStart := time.Now()
-	err = model.Fit(K.V(x), K.V(y), solver, K.WithClearLine(false), K.WithEpochs(3), K.WithEpochCallback(K.SaveModelParametersCallback(model, "./model.gob")))
+	err = model.Fit(K.NamedTs{"input": x}, K.NamedTs{"output_target": y}, solver, K.WithClearLine(false), K.WithEpochs(3), K.WithEpochCallback(K.SaveModelParametersCallback(model, "./model.gob")))
 	if err != nil {
 		panic(err)
 	}
@@ -75,11 +75,11 @@ func main() {
 	numToPredict := 10
 	xB, _ := x.Slice(T.S(0, numToPredict))
 	yB, _ := y.Slice(T.S(0, numToPredict))
-	yBsP, err := model.Predict(K.V(xB))
+	yBsP, err := model.Predict(K.NamedTs{"input": xB})
 	if err != nil {
 		panic(err)
 	}
-	yBP := yBsP[0]
+	yBP := yBsP["output"]
 
 	// For each prediction, our model outputs 10 numbers which correspond to how likely the image is that digit.
 	//We can get the argmax to see what digit the model predicted was most likely.
@@ -172,7 +172,7 @@ func MakeModel() *K.Model {
 
 	// Build the model
 	// This time we will use CCC (Categorical Cross Entropy) as the loss function. This must be used with softmax.
-	model.MustBuild(K.WithInputs(inputs), K.WithOutputs(outputs), K.WithLosses(K.CCE))
+	model.MustBuild(K.WithInput("input", inputs), K.WithOutput("output", outputs), K.WithLoss(K.CCELoss("output_target", outputs)))
 
 	return model
 }

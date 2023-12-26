@@ -3,18 +3,20 @@ package goras
 import T "gorgonia.org/tensor"
 
 type TrainingDataGenerator interface {
-	NextBatch(batchSize int) ([]T.Tensor, []T.Tensor, error) // Should return nil, nil if no more data
-	Reset(batchSize int) error                               // Resets the generator for the next epoch
-	NumBatches() int                                         // Returns the number of batches in this epoch
+	NextBatch(batchSize int) (map[string]T.Tensor, map[string]T.Tensor, error) // Should return nil, nil, nil if no more data
+	Reset(batchSize int) error                                                 // Resets the generator for the next epoch
+	NumBatches() int                                                           // Returns the number of batches in this epoch
 }
+
+var _ TrainingDataGenerator = &TensorTrainingDataGenerator{}
 
 // TensorTrainingDataGenerator is a TrainingDataGenerator that uses tensors as inputs and outputs.
 // It shoudl only be used with small datasets, as it requires the entire dataset to be loaded into memory at once.
 type TensorTrainingDataGenerator struct {
-	inputs                []T.Tensor
-	outputs               []T.Tensor
-	currentBatchedInputs  [][]T.Tensor
-	currentBatchedOutputs [][]T.Tensor
+	inputs                map[string]T.Tensor
+	outputs               map[string]T.Tensor
+	currentBatchedInputs  []map[string]T.Tensor
+	currentBatchedOutputs []map[string]T.Tensor
 	currentBatch          int
 }
 
@@ -22,14 +24,14 @@ type TensorTrainingDataGenerator struct {
 // This is used by the fit method of the model to generate batches of data.
 // The inputs and outputs are the training data and labels respectively.
 // They are a slice due to multiple input output capabilities. If you only have one input and output, you can pass in a slice of length 1 for both.
-func NewTTDG(xs, ys []T.Tensor) *TensorTrainingDataGenerator {
+func NewTTDG(xs, ys map[string]T.Tensor) *TensorTrainingDataGenerator {
 	return &TensorTrainingDataGenerator{
 		inputs:  xs,
 		outputs: ys,
 	}
 }
 
-func (t *TensorTrainingDataGenerator) NextBatch(int) ([]T.Tensor, []T.Tensor, error) {
+func (t *TensorTrainingDataGenerator) NextBatch(int) (map[string]T.Tensor, map[string]T.Tensor, error) {
 	if t.currentBatch >= len(t.currentBatchedInputs) {
 		return nil, nil, nil
 	}

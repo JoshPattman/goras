@@ -1,3 +1,5 @@
+// IMPORTANT - currently using outdated api - look at 1_xor for updated api ref. Most of this eg is still valid tho.
+
 // This is a basic example of using goras to create a simple neural network to solve the XOR problem.
 // We will start by defining the dataset, then creating the model, summarising it, training it, and finally testing it.
 // We will also then save the model to a file, and load it again, then test the loaded model.
@@ -35,11 +37,19 @@ func main() {
 	fmt.Printf("\nModel Summary:\n%s\n", model.Summary())
 	/*OUTPUT
 	Model Summary:
+	================== Inputs ===================
+	Input       x                             Shape: (4, 2)
+	================== Outputs ==================
+	Output      yp                            Shape: (4, 1)
+	================= Loss Reqs =================
+	Loss Req    yt                            Shape: (4, 1)
+	============= Registered Layers =============
 	Layer 0     model_1::input                Shape: (4, 2)               From: [] Num Params 0
 	Layer 1     model_2::dense                Shape: (4, 5)               From: [model_1.input       ] Num Params 15
 	Layer 2     model_3::activation(sigmoid)  Shape: (4, 5)               From: [model_2.matmul      ] Num Params 0
 	Layer 3     model_4::dense                Shape: (4, 1)               From: [model_3.activation  ] Num Params 6
 	Layer 4     model_5::activation(sigmoid)  Shape: (4, 1)               From: [model_4.matmul      ] Num Params 0
+	=================== Stats ===================
 	Total number of parameters: 21
 	*/
 
@@ -57,9 +67,11 @@ func main() {
 	// Create an ADAM solver - this is the thing that actually updates the weights.
 	// The solvers we use actually come with the Gorgonia package, and are not part of goras.
 	solver := G.NewAdamSolver(G.WithLearnRate(0.01))
-
 	// Train the model for 1000 epochs. We are also only going to log every 100 epochs, otherwise our terminal will be spammed with output.
-	model.Fit(K.V(x), K.V(y), solver, K.WithEpochs(1000), K.WithLoggingEvery(100))
+	// We need to make sure here we pass the inputs and target outputs with the correct names, which you can see in the summary.
+	// These names are created by us in the MakeModel() function.
+	// In a more complex model, you may have multiple inputs, outputs, or a whacky loss function with weirdly shaped targets, so this is why we need to specify the names.
+	model.Fit(K.NamedTs{"x": x}, K.NamedTs{"yt": y}, solver, K.WithEpochs(1000), K.WithLoggingEvery(100))
 
 	/*OUTPUT
 	Epoch 1/1000 - Loss: 0.294247 |Done|
@@ -205,8 +217,11 @@ func MakeModel() *K.Model {
 	// Building the model also creates the *G.TapeMachine that is used to run the model.
 	// We are going to use the mean squared error loss function.
 	// Goras models also support multiple inputs and outputs.
-	// We are only using one of each here, but if you wanted to use multiple outputs, you should also remeber to specify the loss for each output.
-	model.MustBuild(K.WithInputs(inputs), K.WithOutputs(outputs), K.WithLosses(K.MSE))
+	// We are only using one of each here, but if you wanted to use multiple outputs, you can just pass more WithInput or WithOutput options.
+	// A model can only ever have one loss (with multiple outputs, you should add their losses together and pass them to the model as a single loss)
+	// Here, we are telling goras that when we pass an input, we will label it as "x", and when we pass a target output, we will label it as "yt".
+	// When the model gives us back some predictions, they will be labelled as "yp".
+	model.MustBuild(K.WithInput("x", inputs), K.WithOutput("yp", outputs), K.WithLoss(K.MSELoss("yt", outputs)))
 
 	return model
 }
@@ -214,14 +229,12 @@ func MakeModel() *K.Model {
 // Function to run a model and print some values to the terminal
 func TestModel(model *K.Model, x, y T.Tensor, testName string) {
 	// Predict the output for the given input.
-	// As our model expects a slice of inputs (to support multiple input models), we need to wrap our input in a slice.
-	// K.V(x) simply is shorthand for []T.Tensor{x}
-	yps, err := model.Predict(K.V(x))
+	yps, err := model.Predict(K.NamedTs{"x": x})
 	if err != nil {
 		panic(err)
 	}
-	// Again, the predict funtion returns a slice of outputs, but as we only have a single output node, need to get the first one.
-	yp := yps[0]
+	// The predict funtion returns a map of outputs with ouput names as keys, and as we called our output "yp", we can get it like this.
+	yp := yps["yp"]
 
 	fmt.Printf("\nPredictions (%s):\n", testName)
 	for i := 0; i < yp.Shape()[0]; i++ {
