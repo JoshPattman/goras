@@ -1,5 +1,3 @@
-// IMPORTANT - currently using outdated api - look at 1_xor for updated api ref. Most of this eg is still valid tho.
-
 // This example uses a convolutional neural network like the previous one, but this time to classify if an image is a dog or a cat.
 // We will be using quite a big dataset, which you can either get from:
 //
@@ -97,7 +95,7 @@ func main() {
 
 	// If this function causes some panic from gorgonia, please raise an issue on the Goras repo. I'm not sure if it is jsut my laptop or if there is a bug.
 	solver := G.NewAdamSolver(G.WithLearnRate(0.001))
-	model.Fit(K.V(x), K.V(y), solver, K.WithEpochs(14))
+	model.Fit(K.NamedTs{"x": x}, K.NamedTs{"yt": y}, solver, K.WithEpochs(14))
 
 	// Ok, now we are going to use some of the images that we trained on (it would be better to use images we have never seen before),
 	// And we will get the model to put images it thinks are dogs in the ./dogs dir, and cats in the ./cats dir.
@@ -126,11 +124,11 @@ func main() {
 		testSet = append(testSet, testDogs[i])
 	}
 	testX := K.ImageUtils.ImagesToTensor(testSet, false)
-	preds, err := model.PredictBatch(K.V(testX))
+	preds, err := model.PredictBatch(K.NamedTs{"x": testX})
 	if err != nil {
 		panic(err)
 	}
-	pred := preds[0] // We are not using mutiple outputs, so we can just take the first one which is our one and only output
+	pred := preds["y"] // We are not using mutiple outputs, so we can just take the first one which is our one and only output
 	for i := range testSet {
 		predVal, err := pred.At(i, 0)
 		if err != nil {

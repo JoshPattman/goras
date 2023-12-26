@@ -5,12 +5,12 @@ import (
 	"os"
 )
 
-type EpochCallback func(epoch int) error
+type EpochCallback func(epoch int, avgLoss float64) error
 
 // SaveModelParametersCallback saves the model parameters to the given path.
 // It overwrites the file at the given path each epoch, so you only get the most recent model.
 func SaveModelParametersCallback(model *Model, path string) EpochCallback {
-	return func(epoch int) error {
+	return func(epoch int, avgLoss float64) error {
 		f, err := os.Create(path)
 		if err != nil {
 			return err
@@ -24,7 +24,7 @@ func SaveModelParametersCallback(model *Model, path string) EpochCallback {
 // It saves the model every `every` epochs, so you get multiple models.
 // The path should contain a %v format specifier, which will be replaced with the epoch number.
 func RepeatedSaveModelParametersCallback(model *Model, pathWithFormat string, every int) EpochCallback {
-	return func(epoch int) error {
+	return func(epoch int, avgLoss float64) error {
 		if epoch%every == 0 {
 			f, err := os.Create(fmt.Sprintf(pathWithFormat, epoch))
 			if err != nil {

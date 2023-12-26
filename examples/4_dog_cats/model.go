@@ -36,7 +36,7 @@ func MakeModel() *K.Model {
 	output = K.Sigmoid(m, n()).MustAttach(output)
 
 	// We are using BCE (binary cross-entropy) loss as it is better for binary classifiers than MSE
-	m.MustBuild(K.WithInputs(input), K.WithOutputs(output), K.WithLosses(K.BCE))
+	m.MustBuild(K.WithInput("", input), K.WithOutput("y", output), K.WithLoss(K.BCELoss("yt", output)))
 
 	return m
 }

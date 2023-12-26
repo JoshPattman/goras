@@ -85,13 +85,13 @@ func (m *Model) Build(opts ...BuildOpts) error {
 	// Define loss function
 	lossNode, lossRequiredNodes, err := buildParams.loss()
 	if err != nil {
-		return err
+		return fmt.Errorf("error while adding loss: %v", err)
 	}
 	G.Read(lossNode, &m.LossValue)
 	m.LossRequiredNodes = lossRequiredNodes
 	_, err = G.Grad(lossNode, m.Trainables()...)
 	if err != nil {
-		return err
+		return fmt.Errorf("error while computing grad: %v", err)
 	}
 
 	// Create machine
@@ -172,7 +172,7 @@ func (m *Model) ReadParams(r io.Reader) error {
 	return m.SetParams(params)
 }
 
-// BindParamsFrom binds the parameters in the model to the parameters in another model, meaning layers with the same name will share the same tensors.
+// BindParamsFrom binds the parameters in the model m1 to the parameters in this model m, meaning layers with the same name will share the same tensors.
 // This is a bit of a hack to allow two models to train the same weights.
 // This can be called multiple times, where later binds may override earlier ones.
 // For example, if you are making an autoencoder, you would have one main model for training, and an encoder model and decoder model which are bound to that.
@@ -184,6 +184,24 @@ func (m *Model) BindParamsFrom(m1 *Model) error {
 			if p, ok := paramsSrc[l.Name()+":"+k]; ok {
 				if err := G.Let(v, p); err != nil {
 					return fmt.Errorf("error binding parameter %s: %s", l.Name()+":"+k, err)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// CopyParamsFrom copys the parameters in the model m1 to the parameters in this model m, meaning layers with the same name will share the same values in their tensors.
+// The tensors will be copies of each other, so changing one will not change the other.
+// If you want to share the tensors, use BindParamsFrom instead.
+func (m *Model) CopyParamsFrom(m1 *Model) error {
+	paramsSrc := m1.GetParams()
+	for _, l := range m.Layers {
+		for k, v := range l.Parameters() {
+			if p, ok := paramsSrc[l.Name()+":"+k]; ok {
+				pCopy := p.Clone().(*T.Dense)
+				if err := G.Let(v, pCopy); err != nil {
+					return fmt.Errorf("error copying parameter %s: %s", l.Name()+":"+k, err)
 				}
 			}
 		}
@@ -345,7 +363,7 @@ func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ..
 			fmt.Printf("\rEpoch %d/%d - Loss: %f |Done| %40v%v", epoch, params.Epochs, loss/currentBatches, "", lineEnd)
 		}
 		for _, cb := range params.EpochEndCallbakcs {
-			if err := cb(epoch); err != nil {
+			if err := cb(epoch, loss/currentBatches); err != nil {
 				return err
 			}
 		}

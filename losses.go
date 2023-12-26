@@ -20,7 +20,7 @@ type LossFunc func() (lossOut *G.Node, lossInps map[string]*G.Node, err error)
 // It should be used when using Model.Build().
 func MSELoss(targetName string, output *G.Node) LossFunc {
 	return func() (*G.Node, map[string]*G.Node, error) {
-		target := G.NewMatrix(output.Graph(), G.Float64, G.WithShape(output.Shape()...))
+		target := G.NewMatrix(output.Graph(), output.Dtype(), G.WithShape(output.Shape()...))
 		x, err := G.Sub(output, target)
 		if err != nil {
 			return nil, nil, err
@@ -41,7 +41,7 @@ func MSELoss(targetName string, output *G.Node) LossFunc {
 // It should be used when using Model.Build().
 func BCELoss(targetName string, output *G.Node) LossFunc {
 	return func() (*G.Node, map[string]*G.Node, error) {
-		target := G.NewMatrix(output.Graph(), G.Float64, G.WithShape(output.Shape()...))
+		target := G.NewMatrix(output.Graph(), output.Dtype(), G.WithShape(output.Shape()...))
 		x1, err := G.Log(output)
 		if err != nil {
 			return nil, nil, err
@@ -84,26 +84,26 @@ func BCELoss(targetName string, output *G.Node) LossFunc {
 
 func CCELoss(targetName string, output *G.Node) LossFunc {
 	return func() (*G.Node, map[string]*G.Node, error) {
-		target := G.NewMatrix(output.Graph(), G.Float64, G.WithShape(output.Shape()...))
+		target := G.NewMatrix(output.Graph(), output.Dtype(), G.WithShape(output.Shape()...))
 		x, err := G.Log(output)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("CCE error while performing Log op: %v", err)
 		}
 		x, err = G.HadamardProd(target, x)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("CCE error while performing HardmanProd op: %v", err)
 		}
 		x, err = G.Sum(x, 1)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("CCE error while performing Sum op: %v", err)
 		}
 		x, err = G.Mean(x)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("CCE error while performing Mean op: %v", err)
 		}
 		x, err = G.Neg(x)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, fmt.Errorf("CCE error while performing Neg op: %v", err)
 		}
 		return x, map[string]*G.Node{targetName: target}, nil
 	}
@@ -145,6 +145,7 @@ func L2Loss(layers ...Layer) LossFunc {
 	}
 }
 
+// KNOWN BUG: I'm pretty certain this will not work if the graph is using float32s, because all the weights are float64
 func WeightedAdditiveLoss(losses []LossFunc, weights []float64) LossFunc {
 	return func() (*G.Node, map[string]*G.Node, error) {
 		if len(losses) != len(weights) {

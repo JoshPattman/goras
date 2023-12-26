@@ -56,7 +56,7 @@ func main() {
 	// FitBatch also does not have some of the useful features of Fit, such as the loading bar.
 	solver := G.NewAdamSolver(G.WithLearnRate(0.01))
 	for epoch := 0; epoch <= 1000; epoch++ {
-		loss, _ := modelFull.FitBatch(K.V(x), K.V(y), solver)
+		loss, _ := modelFull.FitBatch(K.NamedTs{"x": x}, K.NamedTs{"yt": y}, solver)
 		if epoch%100 == 0 {
 			fmt.Printf("Epoch: %-4v Loss %.4f\n", fmt.Sprint(epoch), loss)
 		}
@@ -149,18 +149,18 @@ func MakeModel(isJustForEncoding bool) *K.Model {
 		outputs = decoder(model, outputs)
 	}
 
-	model.MustBuild(K.WithInputs(inputs), K.WithOutputs(outputs), K.WithLosses(K.MSE))
+	model.MustBuild(K.WithInput("x", inputs), K.WithOutput("y", outputs), K.WithLoss(K.MSELoss("yt", outputs)))
 
 	return model
 }
 
 // Function to run a model and print some values to the terminal
 func TestModel(model *K.Model, x, y T.Tensor, testName string) {
-	yps, err := model.Predict(K.V(x))
+	yps, err := model.Predict(K.NamedTs{"x": x})
 	if err != nil {
 		panic(err)
 	}
-	yp := yps[0]
+	yp := yps["y"]
 
 	fmt.Printf("\nPredictions (%s):\n", testName)
 	for i := 0; i < yp.Shape()[0]; i++ {
