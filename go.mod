@@ -1,6 +1,6 @@
 module github.com/JoshPattman/goras
 
-go 1.20
+go 1.21.0
 
 require (
 	golang.org/x/image v0.14.0
