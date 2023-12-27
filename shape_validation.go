@@ -3,7 +3,6 @@ package goras
 import (
 	"fmt"
 
-	"gorgonia.org/tensor"
 	T "gorgonia.org/tensor"
 )
 
@@ -63,7 +62,7 @@ func valAtLeastNDims(n int) shapeValidator {
 	}
 }
 
-func checkBatchedInputShapes(m *Model, inps map[string]tensor.Tensor) error {
+func checkBatchedInputShapes(m *Model, inps map[string]T.Tensor) error {
 	if len(inps) != len(m.InputNodes) {
 		return fmt.Errorf("incorrect number of inputs. expected %v but got %v", len(m.InputNodes), len(inps))
 	}
@@ -79,7 +78,7 @@ func checkBatchedInputShapes(m *Model, inps map[string]tensor.Tensor) error {
 	return nil
 }
 
-func checkBatchedLossRequirementShapes(m *Model, outs map[string]tensor.Tensor) error {
+func checkBatchedLossRequirementShapes(m *Model, outs map[string]T.Tensor) error {
 	if len(outs) != len(m.LossRequiredNodes) {
 		return fmt.Errorf("incorrect number of loss requirements. expected %v but got %v", len(m.LossRequiredNodes), len(outs))
 	}
@@ -95,7 +94,7 @@ func checkBatchedLossRequirementShapes(m *Model, outs map[string]tensor.Tensor) 
 	return nil
 }
 
-func exactShapeEq(a, b tensor.Shape) bool {
+func exactShapeEq(a, b T.Shape) bool {
 	if len(a) != len(b) {
 		return false
 	}
