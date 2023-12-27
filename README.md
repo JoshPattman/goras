@@ -1,3 +1,5 @@
+[![Go Coverage](https://github.com/JoshPattman/goras/wiki/coverage.svg)](https://raw.githack.com/wiki/JoshPattman/goras/coverage.html)
+
 # _Goras_: a _Keras_-like package for Go
 _Goras_ is a package that aims to perform a similar function to _Keras_ in python. It is a somewhat high level package that contains code for making neural models easier than it would be when using the graph computation package directly. Just as _Keras_ uses tensorflow to actually perform maths, _Goras_ uses the excellent [_Gorgonia_](https://gorgonia.org) package for it's graph computation.
 
