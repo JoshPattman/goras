@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	G "gorgonia.org/gorgonia"
+	T "gorgonia.org/tensor"
 )
 
 // ActivationLayer is a layer that applies an activation function to its input.
@@ -70,11 +71,13 @@ func (l *ActivationLayer) Attach(n *G.Node) (*G.Node, error) {
 	case "tanh":
 		on, err = G.Tanh(n)
 	case "binary":
-		on, err = G.Gt(n, G.NewConstant(0.0, G.WithType(l.DType)), true)
+		on, err = G.Gt(n, G.NewConstant(defaultVal(l.DType), G.WithType(l.DType)), true)
 	case "softmax":
 		on, err = customSoftMax(n) //G.SoftMax(n, 1) // TODO: my custom softmax seems to be working but gorgonias dosn't. Invistigate more and maybe create an issue.
 	case "leakyrelu":
-		on, err = G.LeakyRelu(n, 0.01)
+		return nil, fmt.Errorf("leakyrelu is currently broken, please just use relu for now.")
+		//on, err = G.LeakyRelu(n, l.LeakyReluGrad)
+		on, err = customLeakyRelu(n, l.LeakyReluGrad) // TODO: my custom leakyrelu seems to be working but gorgonias dosn't. Invistigate more and maybe create an issue.
 	default:
 		return nil, fmt.Errorf("invalid activation '%s'", l.Activation)
 	}
@@ -84,6 +87,21 @@ func (l *ActivationLayer) Attach(n *G.Node) (*G.Node, error) {
 	}
 	l.InputNodes = []*G.Node{n}
 	return on, err
+}
+
+func defaultVal(dtype T.Dtype) interface{} {
+	switch dtype {
+	case T.Float64:
+		return float64(0.0)
+	case T.Float32:
+		return float32(0.0)
+	case T.Int:
+		return int(0)
+	case T.Bool:
+		return false
+	default:
+		panic("type is not implemented to be default vallable. please open an issue so i will fix")
+	}
 }
 
 // MustAttach attaches this layer to a previous node. It panics on error.
@@ -96,6 +114,7 @@ func (l *ActivationLayer) Parameters() map[string]*G.Node { return make(map[stri
 // This is to try and find the dreaded softmax panic.
 // It will also only do stuff on axis 1
 // Also, this is probably slower than the built in softmax function as it uses mutiple nodes.
+// TODO: i think that gorgonia might have fixed the softmax issue. Investigate more.
 func customSoftMax(x *G.Node) (*G.Node, error) {
 	var err error
 	exponentiatedClasses, err := G.Exp(x)
@@ -107,4 +126,42 @@ func customSoftMax(x *G.Node) (*G.Node, error) {
 		return nil, err
 	}
 	return G.BroadcastHadamardDiv(exponentiatedClasses, summedExponentiatedClasses, []byte{}, []byte{1})
+}
+
+// IMPORTANT:CURRENTLY BROKEN
+// Again, I think the goriginia Leakyrelu is broken. This is a drop in replacement.
+// TODO: investigate more.
+func customLeakyRelu(x *G.Node, alpha float64) (*G.Node, error) {
+	var err error
+	var alphaVal interface{}
+	switch x.Dtype() {
+	case T.Float64:
+		alphaVal = -float64(alpha)
+	case T.Float32:
+		alphaVal = -float32(alpha)
+	default:
+		return nil, fmt.Errorf("leakyrelu can only be used on float64 and float32")
+	}
+
+	rect, err := G.Rectify(x)
+	if err != nil {
+		return nil, err
+	}
+	alphaNode := G.NewConstant(alphaVal, G.WithType(x.Dtype()))
+	multAlphaNode, err := G.HadamardProd(x, alphaNode)
+	if err != nil {
+		return nil, err
+	}
+	var _ = multAlphaNode
+	return rect, nil
+	/*multAlphaNode, err = G.Rectify(multAlphaNode)
+	if err != nil {
+		return nil, err
+	}
+	return rect, nil
+	total, err := G.Sub(rect, multAlphaNode)
+	if err != nil {
+		return nil, err
+	}
+	return total, nil*/
 }

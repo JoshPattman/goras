@@ -8,8 +8,8 @@ import (
 	"gorgonia.org/tensor"
 )
 
-// Conv2DSliceToTensor converts a 2D slice to a tensor. The slice is indexed[row][column].
-func Conv2DSliceToTensor[T any](data [][]T) (tensor.Tensor, error) {
+// Make2DSliceTensor converts a 2D slice to a tensor. The slice is indexed[row][column].
+func Make2DSliceTensor[T any](data [][]T) (tensor.Tensor, error) {
 	if len(data) == 0 || len(data[0]) == 0 {
 		return nil, fmt.Errorf("data slice must have at least one row and one column")
 	}
@@ -32,8 +32,8 @@ func Conv2DSliceToTensor[T any](data [][]T) (tensor.Tensor, error) {
 	return t, nil
 }
 
-// Conv1DSliceToTensor converts a 1D slice to a tensor.
-func Conv1DSliceToTensor[T any](data []T) (tensor.Tensor, error) {
+// Make1DSliceTensor converts a 1D slice to a tensor.
+func Make1DSliceTensor[T any](data []T) (tensor.Tensor, error) {
 	if len(data) == 0 {
 		return nil, fmt.Errorf("data slice must have at least one element")
 	}

@@ -89,9 +89,12 @@ func (m *Model) Build(opts ...BuildOpts) error {
 	}
 	G.Read(lossNode, &m.LossValue)
 	m.LossRequiredNodes = lossRequiredNodes
-	_, err = G.Grad(lossNode, m.Trainables()...)
-	if err != nil {
-		return fmt.Errorf("error while computing grad: %v", err)
+	trainables := m.Trainables()
+	if len(trainables) != 0 {
+		_, err = G.Grad(lossNode, trainables...)
+		if err != nil {
+			return fmt.Errorf("error while computing grad: %v", err)
+		}
 	}
 
 	// Create machine
