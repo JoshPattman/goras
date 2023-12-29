@@ -3,37 +3,52 @@
 ![CI Status](https://github.com/JoshPattman/goras/actions/workflows/go.yml/badge.svg)
 [![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
 
-# _Goras_: a _Keras_-like package for Go
-_Goras_ is a package that aims to perform a similar function to _Keras_ in python. It is a somewhat high level package that contains code for making neural models easier than it would be when using the graph computation package directly. Just as _Keras_ uses tensorflow to actually perform maths, _Goras_ uses the excellent [_Gorgonia_](https://gorgonia.org) package for it's graph computation.
+# **Goras**: A high-level neural network package for Go
+Goras is a Go package offering a high-level interface for simplifying neural network implementation, leveraging the excellent [**Gorgonia**](https://gorgonia.org) package for graph computation. **Goras** has a workflow akin to the [**Keras**](https://keras.io/) functional API, which is capable of building both simple and complex models with relatively simple code.
 
-I am trying to design _Goras_ to have a similar workflow to the _Keras_ functional API. The functional API is capable of building of very complex models with relatively simple code. I have also tried to utilise types and functions from _Gorgonia_ wherever possible. This means that if something is not implemented yet, it is easy to add it yourself. That being said, if you do create any new layers, activations, or anything else, please feel free to pull request :).
+The package is built to be extensible, leveraging types and patterns from **Gorgonia** wherever possible. This means that if a feature does not exist yet, it should be trivial to implement it yourself.
 
 ## Stability
-This is very much an unstable package. I am still trying to figure out how everything fits together best, so I will likely change function declarations and types quite a bit. That being said, the package is currently in a usable state, but just remember to tag onto a specific version.
+Though currently labeled as unstable, this package is still usable, with almost all features in working order. However, be aware that future changes may occur, mainly in response to the anticipated release of **Gorgonia** version `0.10`. While some adjustments might happen, the core functionality of **Goras** is expected to remain largely the same.
 
-## Features
-- Workflow inspired by Keras functional API
+## Overview of Features
+- Workflow inspired by **Keras** functional API
 - Easy to build complex models with custom components
 - Supports multiple model inputs and outputs
-- Provides easy model weights saving and loading
-- Supports many types of layers including Dense, Convolution2D, and MaxPooling2D
-  - I plan to add support for LSTM and MHA layers in the future
+- Provides simple model weights saving and loading
+- Supports multiple types of layers, with more on the way
+  - _Dense_
+  - _Conv2D_
+  - _MaxPooling2D_
+  - _Dropout_
+  - _Reshape_
+- Supports many loss functions with a very flexible method of adding more
+  - _Mean Squared Error_
+  - _Binary Cross-Entropy_
+  - _Categorical Cross-Entropy_
+  - _L2 Normalisation_
+  - _Weighted Additive Loss_ - For combining multiple losses for multiple outputs
 ## Examples
-See the examples directory for some full examples. More coming soon!
+The `examples/` directory contains multiple examples, with detailed comments throughout explaining each step. It is recommended that you read through the examples in order, as most concepts are only talked about once.
 ## Todo
-- Add these layers
+- Add these layers (most of these will need to implement the op in gorgonia first)
   - `Recurrent`
   - `LSTM`
-  - `Deconvolution` - I think I will have to implement this in Gorgonia and pull request it first
+  - `Deconvolution`
   - `Upsampling`
-  - `Embedding` - This could be done with a dense layer (like in golgi) but i think writing a custom embedding layer would be more efficient.
-- Add `L1` and `L2` regularlization
-- Check if GPU support is working for cuda. I think it should work, but I havn't got round to testing yet.
+  - `Embedding`
+  - `MultiHeadAttention`
+  - `BatchNorm`
+  - `LayerNorm`
+- Add `L1` regularlization
 - Currently, batching for training discards the remainder of the last batch (eg batch size 8, 17 elements, will only fit 16 things and the last thing will be discarded).
   - I will fix this once I hear back on an issue https://github.com/gorgonia/gorgonia/issues/204
   - Batching for prediction zero pads but this is a bit wasteful
+  - This is not really a big problem though, and if you really need inference performance for a certain batch size, you can just make another model and copy the weights over
 - Add more callbacks for `Fit`
 - Add a shuffle parameter to fit
+- Tensorboard Integration
 - Add `SCCE` Loss
   - I now know how to add this, and will do so when I hear if a onehot op will get added to gorgonia
   - https://github.com/gorgonia/gorgonia/issues/559
+- Get GPU support working. I am waiting for gorgonia v0.10 for this as I think the new version changes a lot of CUDA stuff.
