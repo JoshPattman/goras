@@ -17,7 +17,7 @@ type DenseLayer struct {
 
 // Dense creates a new dense layer on the specified model.
 func Dense(m *Model, name string, nodes int) *DenseLayer {
-	d := &DenseLayer{LayerBase{m.Graph, name, "dense", true, m.DType, nil, nil}, nil, nodes}
+	d := &DenseLayer{LayerBase{m.Graph, name, "dense", true, nil, nil}, nil, nodes}
 	m.AddLayer(d)
 	return d
 }
@@ -29,8 +29,8 @@ func (l *DenseLayer) Attach(n *G.Node) (*G.Node, error) {
 	}
 	numInputs := n.Shape()[1]
 	batchSize := n.Shape()[0]
-	l.Weights = G.NewMatrix(l.Graph, l.DType, G.WithShape(numInputs+1, l.Nodes), G.WithInit(G.GlorotN(1.0)))
-	bias := G.NewConstant(T.Ones(l.DType, batchSize, 1))
+	l.Weights = G.NewMatrix(l.Graph, n.Dtype(), G.WithShape(numInputs+1, l.Nodes), G.WithInit(G.GlorotN(1.0)))
+	bias := G.NewConstant(T.Ones(n.Dtype(), batchSize, 1))
 	// Build the graph
 	withBias, err := G.Concat(1, n, bias)
 	if err != nil {

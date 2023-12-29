@@ -18,7 +18,7 @@ type ActivationLayer struct {
 // Activation creates a new ActivationLayer on the Model with the given activation function.
 // The activation function can be one of ["sigmoid", "relu", "tanh", "binary", "softmax", "leakyrelu"].
 func Activation(m *Model, name string, activation string) *ActivationLayer {
-	a := &ActivationLayer{LayerBase{m.Graph, name, "activation(" + activation + ")", false, m.DType, nil, nil}, activation, 0.01}
+	a := &ActivationLayer{LayerBase{m.Graph, name, "activation(" + activation + ")", false, nil, nil}, activation, 0.01}
 	m.AddLayer(a)
 	return a
 }
@@ -71,7 +71,7 @@ func (l *ActivationLayer) Attach(n *G.Node) (*G.Node, error) {
 	case "tanh":
 		on, err = G.Tanh(n)
 	case "binary":
-		on, err = G.Gt(n, G.NewConstant(defaultVal(l.DType), G.WithType(l.DType)), true)
+		on, err = G.Gt(n, G.NewConstant(defaultVal(n.Dtype()), G.WithType(n.Dtype())), true)
 	case "softmax":
 		on, err = customSoftMax(n) //G.SoftMax(n, 1) // TODO: my custom softmax seems to be working but gorgonias dosn't. Invistigate more and maybe create an issue.
 	case "leakyrelu":

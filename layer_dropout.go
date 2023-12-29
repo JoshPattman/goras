@@ -13,7 +13,7 @@ type DropoutLayer struct {
 
 // Dropout creates a new DropoutLayer on the Model with the given dropout probability.
 func Dropout(m *Model, name string, dropoutProbability float64) *DropoutLayer {
-	d := &DropoutLayer{LayerBase{m.Graph, name, "dropout", false, m.DType, nil, nil}, dropoutProbability}
+	d := &DropoutLayer{LayerBase{m.Graph, name, "dropout", false, nil, nil}, dropoutProbability}
 	m.AddLayer(d)
 	return d
 }

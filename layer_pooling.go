@@ -21,7 +21,7 @@ type MaxPooling2DLayer struct {
 // It will have padding=same stride=poolSize, and it is the same in both dims.
 func SimpleMaxPooling2D(m *Model, name string, poolSize int) *MaxPooling2DLayer {
 	l := &MaxPooling2DLayer{
-		LayerBase{m.Graph, name, "maxpool2d", false, m.DType, nil, nil},
+		LayerBase{m.Graph, name, "maxpool2d", false, nil, nil},
 		[]int{poolSize, poolSize},
 		[]int{poolSize, poolSize},
 		"same",
@@ -34,7 +34,7 @@ func SimpleMaxPooling2D(m *Model, name string, poolSize int) *MaxPooling2DLayer 
 // Padding can be either "same" or "valid".
 func MaxPooling2D(m *Model, name string, poolSize, stride []int, padding string) *MaxPooling2DLayer {
 	l := &MaxPooling2DLayer{
-		LayerBase{m.Graph, name, "maxpool2d", false, m.DType, nil, nil},
+		LayerBase{m.Graph, name, "maxpool2d", false, nil, nil},
 		poolSize,
 		stride,
 		padding,

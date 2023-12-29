@@ -22,12 +22,11 @@ type Model struct {
 	OutputValues      map[string]*G.Value // This is deliberately a ref because i think maps are scary
 	LossValue         G.Value
 	LossRequiredNodes map[string]*G.Node
-	DType             T.Dtype
 }
 
 // NewModel creates a new model with no layers
-func NewModel(dataType T.Dtype) *Model {
-	return &Model{Graph: G.NewGraph(), Layers: []Layer{}, DType: dataType}
+func NewModel() *Model {
+	return &Model{Graph: G.NewGraph(), Layers: []Layer{}}
 }
 
 // AddLayer adds a layer to the model. You usually don't need to call this directly, as the layer constructors do it for you.
@@ -272,13 +271,13 @@ func (m *Model) FitBatch(inputs, lossRequirements map[string]T.Tensor, solver G.
 		return 0, err
 	}
 	loss := 0.0
-	switch m.DType {
+	switch m.LossValue.Dtype() {
 	case T.Float64:
 		loss = m.LossValue.Data().(float64)
 	case T.Float32:
 		loss = float64(m.LossValue.Data().(float32))
 	default:
-		return 0, fmt.Errorf("unsupported loss dtype %v, please use either float64 or float32", m.DType)
+		return 0, fmt.Errorf("unsupported loss dtype %v, please use either float64 or float32", m.LossValue.Dtype())
 	}
 	return loss, nil
 }

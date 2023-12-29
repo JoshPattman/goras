@@ -40,6 +40,9 @@ The `examples/` directory contains multiple examples, with detailed comments thr
   - `MultiHeadAttention`
   - `BatchNorm`
   - `LayerNorm`
+  - `Concat`
+  - `OneHot`
+- Increase test coverage
 - Add `L1` regularlization
 - Currently, batching for training discards the remainder of the last batch (eg batch size 8, 17 elements, will only fit 16 things and the last thing will be discarded).
   - I will fix this once I hear back on an issue https://github.com/gorgonia/gorgonia/issues/204
@@ -51,4 +54,5 @@ The `examples/` directory contains multiple examples, with detailed comments thr
 - Add `SCCE` Loss
   - I now know how to add this, and will do so when I hear if a onehot op will get added to gorgonia
   - https://github.com/gorgonia/gorgonia/issues/559
+- Make a way to not only save model weights but also the model structure (not sure how to do this well yet though)
 - Get GPU support working. I am waiting for gorgonia v0.10 for this as I think the new version changes a lot of CUDA stuff.

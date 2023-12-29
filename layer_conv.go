@@ -21,7 +21,7 @@ type Conv2DLayer struct {
 // This means that the output will be the same shape as the input.
 func SimpleConv2D(m *Model, name string, kernelSize int, numKernels int) *Conv2DLayer {
 	l := &Conv2DLayer{
-		LayerBase{m.Graph, name, "conv2d", true, m.DType, nil, nil},
+		LayerBase{m.Graph, name, "conv2d", true, nil, nil},
 		nil,
 		[]int{kernelSize, kernelSize},
 		numKernels,
@@ -36,7 +36,7 @@ func SimpleConv2D(m *Model, name string, kernelSize int, numKernels int) *Conv2D
 // Options for padding are "same" or "valid".
 func Conv2D(m *Model, name string, kernelShape, stride []int, padding string, numKernels int) *Conv2DLayer {
 	l := &Conv2DLayer{
-		LayerBase{m.Graph, name, "conv2d", true, m.DType, nil, nil},
+		LayerBase{m.Graph, name, "conv2d", true, nil, nil},
 		nil,
 		kernelShape,
 		numKernels,
@@ -57,7 +57,7 @@ func (l *Conv2DLayer) Attach(x *G.Node) (*G.Node, error) {
 		pad = []int{l.KernelSize[0] / 2, l.KernelSize[1] / 2}
 	}
 	previousKernels := x.Shape()[1]
-	l.Kernels = G.NewTensor(l.Graph, l.DType, 4, G.WithShape(l.NumKernels, previousKernels, l.KernelSize[0], l.KernelSize[1]), G.WithInit(G.GlorotN(1.0)))
+	l.Kernels = G.NewTensor(l.Graph, x.Dtype(), 4, G.WithShape(l.NumKernels, previousKernels, l.KernelSize[0], l.KernelSize[1]), G.WithInit(G.GlorotN(1.0)))
 	on, err := G.Conv2d(x, l.Kernels, l.KernelSize, pad, l.Stride, []int{1, 1})
 	l.OutputNode = on
 	if on != nil {
