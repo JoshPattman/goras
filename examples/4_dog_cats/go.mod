@@ -1,9 +1,9 @@
 module 4_dogs_cats
 
-go 1.20
+go 1.21.0
 
 require (
-	github.com/JoshPattman/goras v0.2.0
+	github.com/JoshPattman/goras v0.3.0
 	gorgonia.org/gorgonia v0.9.18
 	gorgonia.org/tensor v0.9.24
 )

@@ -7,8 +7,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/JoshPattman/datautil v0.0.1 h1:gfEvK891EIvesAaHHE0dg79A+kWEV1GwQ2+iWM008zg=
 github.com/JoshPattman/datautil v0.0.1/go.mod h1:TEfDeMksylTbL29Q43jChJLNia151bOakOK7x8d7rKw=
-github.com/JoshPattman/goras v0.2.0 h1:EwxyfqwAwcHwrj0DrFy5X+1XGz+ce4FwVff0VLDBdM0=
-github.com/JoshPattman/goras v0.2.0/go.mod h1:MTgoc589gj83Exx3ROj3YW1bs+RJddMjX+pdjvbOmj0=
+github.com/JoshPattman/goras v0.3.0 h1:ZlILEj52jv/i087OqxQOls/QQZm6bgrTcuv9iYEW0YA=
+github.com/JoshPattman/goras v0.3.0/go.mod h1:g6cGmn+UoVfW0SUeWD1ce8S1La6K1riZwXhZMjfRGuE=
 github.com/ajstarks/deck v0.0.0-20200831202436-30c9fc6549a9/go.mod h1:JynElWSGnm/4RlzPXRlREEwqTHAN3T56Bv2ITsFT3gY=
 github.com/ajstarks/deck/generate v0.0.0-20210309230005-c3f852c02e19/go.mod h1:T13YZdzov6OU0A1+RfKZiZN9ca6VeKdBdyDV+BY97Tk=
 github.com/ajstarks/svgo v0.0.0-20180226025133-644b8db467af/go.mod h1:K08gAheRH3/J6wwsYMMT4xOr94bZjxIelGM0+d/wbFw=

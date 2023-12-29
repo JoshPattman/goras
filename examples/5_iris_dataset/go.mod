@@ -4,7 +4,7 @@ go 1.21.0
 
 require (
 	github.com/JoshPattman/datautil v0.0.1
-	github.com/JoshPattman/goras v0.2.0
+	github.com/JoshPattman/goras v0.3.0
 	github.com/go-gota/gota v0.12.0
 	gorgonia.org/gorgonia v0.9.18
 	gorgonia.org/tensor v0.9.24
