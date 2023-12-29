@@ -37,8 +37,8 @@ func main() {
 
 	// Create the model. As it is a linear regression model, we only need a single dense layer.
 	// We also use a batch size of 16.
-	model := goras.NewModel(tensor.Float64)
-	inp := goras.Input(model, "input", 16, 4).Node()
+	model := goras.NewModel()
+	inp := goras.Input(model, "input", tensor.Float64, 16, 4).Node()
 	out := goras.Dense(model, "dense", 3).MustAttach(inp)
 	out = goras.Softmax(model, "activation").MustAttach(out)
 

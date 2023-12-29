@@ -12,11 +12,11 @@ func makeXORModel() (*Model, error) {
 	batchSize := 4
 	inputNodes, hiddenNodes, outputNodes := 2, 5, 1
 
-	model := NewModel(T.Float64)
+	model := NewModel()
 
 	n := NewNamer("model")
 
-	inputs := Input(model, n(), batchSize, inputNodes).Node()
+	inputs := Input(model, n(), T.Float64, batchSize, inputNodes).Node()
 	outputs, err := Dense(model, n(), hiddenNodes).Attach(inputs)
 	if err != nil {
 		return nil, err
@@ -88,11 +88,11 @@ func makeUnfinishedXORModel() (*Model, *G.Node, *G.Node, error) {
 	batchSize := 4
 	inputNodes, hiddenNodes, outputNodes := 2, 5, 1
 
-	model := NewModel(T.Float64)
+	model := NewModel()
 
 	n := NewNamer("model")
 
-	inputs := Input(model, n(), batchSize, inputNodes).Node()
+	inputs := Input(model, n(), T.Float64, batchSize, inputNodes).Node()
 	outputs, err := Dense(model, n(), hiddenNodes).Attach(inputs)
 	if err != nil {
 		return nil, nil, nil, err
@@ -236,9 +236,9 @@ func TestTensorUtils(t *testing.T) {
 }
 
 func makeSingleActivationModel(ac func(*Model, string) *ActivationLayer, typ T.Dtype) (*Model, error) {
-	model := NewModel(typ)
+	model := NewModel()
 	namer := NewNamer("model")
-	inputs := Input(model, namer(), 2, 3).Node()
+	inputs := Input(model, namer(), typ, 2, 3).Node()
 	outputs, err := ac(model, namer()).Attach(inputs)
 	if err != nil {
 		return nil, err
@@ -347,4 +347,44 @@ func TestActivations(t *testing.T) {
 		if err := testActivation(lr001, x, lr001Y); err != nil {
 			t.Fatal(err)
 		}*/
+}
+
+func TestOneHot(t *testing.T) {
+	model := NewModel()
+	namer := NewNamer("model")
+	inputs := Input(model, namer(), T.Int, 8).Node()
+	outputs, err := OneHot(model, namer(), T.Float64, 5).Attach(inputs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = model.Build(WithInput("x", inputs), WithOutput("yp", outputs), WithLoss(MSELoss("yt", outputs)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	yp, err := model.Predict(NamedTs{"x": T.New(
+		T.WithShape(8),
+		T.WithBacking([]int{1, 3, 2, 0, 4, 1, 3, 2}),
+	)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if yp["yp"].Shape()[0] != 8 || yp["yp"].Shape()[1] != 5 {
+		t.Fatal("wrong output shape: ", yp["yp"].Shape())
+	}
+	if !yp["yp"].Eq(T.New(
+		T.WithShape(8, 5),
+		T.WithBacking([]float64{
+			0, 1, 0, 0, 0,
+			0, 0, 0, 1, 0,
+			0, 0, 1, 0, 0,
+			1, 0, 0, 0, 0,
+			0, 0, 0, 0, 1,
+			0, 1, 0, 0, 0,
+			0, 0, 0, 1, 0,
+			0, 0, 1, 0, 0,
+		}),
+	)) {
+		t.Fatal("wrong output: ", yp["yp"])
+	}
+
 }

@@ -16,7 +16,7 @@ type ReshapeLayer struct {
 // Reshape creates a new ReshapeLayer on the Model with the given target shape.
 func Reshape(model *Model, name string, newShape T.Shape) *ReshapeLayer {
 	l := &ReshapeLayer{
-		LayerBase: LayerBase{model.Graph, name, "reshape", false, model.DType, nil, nil},
+		LayerBase: LayerBase{model.Graph, name, "reshape", false, nil, nil},
 		ToShape:   newShape,
 	}
 	model.AddLayer(l)

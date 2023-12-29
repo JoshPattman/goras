@@ -1,6 +1,14 @@
 package goras
 
-import T "gorgonia.org/tensor"
+import (
+	"reflect"
+
+	T "gorgonia.org/tensor"
+)
+
+type nilHelperType int
+
+var nilType = T.Dtype{Type: reflect.TypeOf(nilHelperType(0))}
 
 func copyMap[T comparable, U any](dst, src map[T]U) {
 	for k, v := range src {
