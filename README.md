@@ -22,6 +22,7 @@ Though currently labeled as unstable, this package is still usable, with almost 
   - _MaxPooling2D_
   - _Dropout_
   - _Reshape_
+  - _OneHot_
 - Supports many loss functions with a very flexible method of adding more
   - _Mean Squared Error_
   - _Binary Cross-Entropy_
@@ -41,7 +42,6 @@ The `examples/` directory contains multiple examples, with detailed comments thr
   - `BatchNorm`
   - `LayerNorm`
   - `Concat`
-  - `OneHot`
 - Increase test coverage
 - Add `L1` regularlization
 - Currently, batching for training discards the remainder of the last batch (eg batch size 8, 17 elements, will only fit 16 things and the last thing will be discarded).

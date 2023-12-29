@@ -7,6 +7,9 @@ import (
 	T "gorgonia.org/tensor"
 )
 
+// A OneHotLayer is a layer that performs a one-hot encoding of the input.
+// The input should be a 1D tensor of integers (batchsize,).
+// The output will be a 2D tensor of the specified dtype (batchsize, numClasses).
 type OneHotLayer struct {
 	LayerBase
 	NumClasses int
