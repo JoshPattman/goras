@@ -3,6 +3,7 @@ module github.com/JoshPattman/goras
 go 1.21.0
 
 require (
+	github.com/chewxy/hm v1.0.0
 	golang.org/x/image v0.14.0
 	gorgonia.org/gorgonia v0.9.18
 	gorgonia.org/tensor v0.9.24
@@ -11,7 +12,6 @@ require (
 require (
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 // indirect
 	github.com/awalterschulze/gographviz v2.0.3+incompatible // indirect
-	github.com/chewxy/hm v1.0.0 // indirect
 	github.com/chewxy/math32 v1.10.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
