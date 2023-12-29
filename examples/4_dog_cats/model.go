@@ -7,11 +7,11 @@ import (
 
 // Function to make a dogs/cats classifier
 func MakeModel() *K.Model {
-	m := K.NewModel(T.Float64)
+	m := K.NewModel()
 	n := K.NewNamer("model")
 
 	// The shape is (batch, channels (3 because the images are RGB), height, width)
-	input := K.Input(m, n(), 32, 3, 64, 64).Node()
+	input := K.Input(m, n(), T.Float64, 32, 3, 64, 64).Node()
 
 	// Current Shape: (32,3,64,64)
 	output := K.SimpleConv2D(m, n(), 3, 16).MustAttach(input)

@@ -134,11 +134,11 @@ func main() {
 func MakeModel() *K.Model {
 	batchSize := 16
 
-	model := K.NewModel(dType)
+	model := K.NewModel()
 	n := K.NewNamer("model")
 
 	// Input shape is (batch_size, channels(this is 1 for b&w), img_x, img_y)
-	inputs := K.Input(model, n(), batchSize, 1, 28, 28).Node()
+	inputs := K.Input(model, n(), dType, batchSize, 1, 28, 28).Node()
 
 	// Convolution and pooling blocks
 	outputs := K.SimpleConv2D(model, n(), 3, 16).MustAttach(inputs)

@@ -191,8 +191,8 @@ func MakeModel() *K.Model {
 	// Define the topology of the model. We are using 2 input nodes, 5 hidden nodes, and 1 output node.
 	inputNodes, hiddenNodes, outputNodes := 2, 5, 1
 
-	// Create the empty model with the Float64 tensor type. In Goras, all layers in a model must share the same tensor type (for now at least).
-	model := K.NewModel(T.Float64)
+	// Create the empty model.
+	model := K.NewModel()
 
 	// Create a function to give each layer a unique name. Names should be unique per layer and are used for debugging (summary) and save/load.
 	// Goras provides the K.NewNamer() function to help with this. It returns a function that generates a new name each time it is called.
@@ -202,7 +202,8 @@ func MakeModel() *K.Model {
 	// Create the input layer. This is how we tell our model the input shape.
 	// Notice how we have to define the batch size here. For now, models have a fixed batch size.
 	// Batch size should always be the first element of the input shape e.g. (batch_size, other_dims...)
-	inputs := K.Input(model, n(), batchSize, inputNodes).Node()
+	// We also have to define a data type, which is propagrated through subsequent layers.
+	inputs := K.Input(model, n(), T.Float64, batchSize, inputNodes).Node()
 	// Create the first Dense (fully connected) layer and its activation.
 	// Note that dense layers do not have an activation themselves, so you have to add one manually after
 	outputs := K.Dense(model, n(), hiddenNodes).MustAttach(inputs)

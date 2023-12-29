@@ -137,11 +137,11 @@ func decoder(model *K.Model, inputs *G.Node) *G.Node {
 func MakeModel(isJustForEncoding bool) *K.Model {
 	// Create the empty model and a namer to provide names to the layers.
 	// The namer is only used for the input layer
-	model := K.NewModel(T.Float64)
+	model := K.NewModel()
 	n := K.NewNamer("model")
 
 	// Create the input layer
-	inputs := K.Input(model, n(), 4, 2).Node()
+	inputs := K.Input(model, n(), T.Float64, 4, 2).Node()
 	// Add the encoder. This is the first layer
 	outputs := encoder(model, inputs)
 	// If we want to, also add the decoder. This is the second layer
