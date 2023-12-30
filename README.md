@@ -1,7 +1,8 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/JoshPattman/goras.svg)](https://pkg.go.dev/github.com/JoshPattman/goras)
 [![Go Coverage](https://github.com/JoshPattman/goras/wiki/coverage.svg)](https://raw.githack.com/wiki/JoshPattman/goras/coverage.html)
 ![CI Status](https://github.com/JoshPattman/goras/actions/workflows/go.yml/badge.svg)
-[![unstable](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
+[![Stability](http://badges.github.io/stability-badges/dist/unstable.svg)](http://github.com/badges/stability-badges)
+[![Go Report](https://goreportcard.com/badge/github.com/JoshPattman/goras)](https://goreportcard.com/badge/github.com/JoshPattman/goras)
 
 # **Goras**: A high-level neural network package for Go
 Goras is a Go package offering a high-level interface for simplifying neural network implementation, leveraging the excellent [**Gorgonia**](https://gorgonia.org) package for graph computation. **Goras** has a workflow akin to the [**Keras**](https://keras.io/) functional API, which is capable of building both simple and complex models with relatively simple code.
