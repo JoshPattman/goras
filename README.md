@@ -31,7 +31,36 @@ Though currently labeled as unstable, this package is still usable, with almost 
   - `L2 Normalisation`
   - `Weighted Additive Loss` - For combining multiple losses for multiple outputs
 ## Examples
-The `examples/` directory contains multiple examples, with detailed comments throughout explaining each step. It is recommended that you read through the examples in order, as most concepts are only talked about once.
+The `examples/` directory contains multiple examples, with detailed comments throughout explaining each step. It is recommended that you read through the examples in order, as most concepts are only talked about once. Alternatively, below are some short code snippets using **Goras**:
+### Build a model
+```go
+batchSize := 4
+inputNodes, hiddenNodes, outputNodes := 2, 5, 1
+
+model := K.NewModel()
+
+n := K.NewNamer("model")
+
+inputs := K.Input(model, n(), T.Float64, batchSize, inputNodes).Node()
+outputs := K.Dense(model, n(), hiddenNodes).MustAttach(inputs)
+outputs = K.Activation(model, n(), "sigmoid").MustAttach(outputs)
+outputs = K.Dense(model, n(), outputNodes).MustAttach(outputs)
+outputs = K.Sigmoid(model, n()).MustAttach(outputs)
+
+model.MustBuild(K.WithInput("x", inputs), K.WithOutput("yp", outputs), K.WithLoss(K.MSELoss("yt", outputs)))
+
+return model
+```
+
+### Fit/Predict with a model
+```go
+err := model.Fit(K.NamedTs{"x": x}, K.NamedTs{"yt": y}, solver, K.WithEpochs(1000), K.WithLoggingEvery(100))
+
+outs, err := model.Predict(K.NamedTs{"x": x})
+yp := outs["yp"]
+```
+
+
 ## Todo
 - Add these layers (most of these will need to implement the op in gorgonia first)
   - `Recurrent`
