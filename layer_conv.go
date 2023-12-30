@@ -57,7 +57,7 @@ func (l *Conv2DLayer) Attach(x *G.Node) (*G.Node, error) {
 		pad = []int{l.KernelSize[0] / 2, l.KernelSize[1] / 2}
 	}
 	previousKernels := x.Shape()[1]
-	l.Kernels = G.NewTensor(l.Graph, x.Dtype(), 4, G.WithShape(l.NumKernels, previousKernels, l.KernelSize[0], l.KernelSize[1]), G.WithInit(G.GlorotN(1.0)))
+	l.Kernels = G.NewTensor(l.Graph, x.Dtype(), 4, G.WithShape(l.NumKernels, previousKernels, l.KernelSize[0], l.KernelSize[1]), G.WithInit(G.GlorotN(1.0)), G.WithName(l.Name()+".kernels"))
 	on, err := G.Conv2d(x, l.Kernels, l.KernelSize, pad, l.Stride, []int{1, 1})
 	l.OutputNode = on
 	if on != nil {

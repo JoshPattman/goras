@@ -20,7 +20,7 @@ type LossFunc func() (lossOut *G.Node, lossInps map[string]*G.Node, err error)
 // It should be used when using Model.Build().
 func MSELoss(targetName string, output *G.Node) LossFunc {
 	return func() (*G.Node, map[string]*G.Node, error) {
-		target := G.NewMatrix(output.Graph(), output.Dtype(), G.WithShape(output.Shape()...))
+		target := G.NewMatrix(output.Graph(), output.Dtype(), G.WithShape(output.Shape()...), G.WithName(targetName))
 		x, err := G.Sub(output, target)
 		if err != nil {
 			return nil, nil, err
@@ -41,12 +41,12 @@ func MSELoss(targetName string, output *G.Node) LossFunc {
 // It should be used when using Model.Build().
 func BCELoss(targetName string, output *G.Node) LossFunc {
 	return func() (*G.Node, map[string]*G.Node, error) {
-		target := G.NewMatrix(output.Graph(), output.Dtype(), G.WithShape(output.Shape()...))
+		target := G.NewMatrix(output.Graph(), output.Dtype(), G.WithShape(output.Shape()...), G.WithName(targetName))
 		x1, err := G.Log(output)
 		if err != nil {
 			return nil, nil, err
 		}
-		x2, err := G.Sub(G.NewConstant(1.0), output)
+		x2, err := G.Sub(G.NewConstant(1.0, G.WithName(targetName+".const1a")), output)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -58,7 +58,7 @@ func BCELoss(targetName string, output *G.Node) LossFunc {
 		if err != nil {
 			return nil, nil, err
 		}
-		x3, err := G.Sub(G.NewConstant(1.0), target)
+		x3, err := G.Sub(G.NewConstant(1.0, G.WithName(targetName+".const1b")), target)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -84,7 +84,7 @@ func BCELoss(targetName string, output *G.Node) LossFunc {
 
 func CCELoss(targetName string, output *G.Node) LossFunc {
 	return func() (*G.Node, map[string]*G.Node, error) {
-		target := G.NewMatrix(output.Graph(), output.Dtype(), G.WithShape(output.Shape()...))
+		target := G.NewMatrix(output.Graph(), output.Dtype(), G.WithShape(output.Shape()...), G.WithName(targetName))
 		x, err := G.Log(output)
 		if err != nil {
 			return nil, nil, fmt.Errorf("CCE error while performing Log op: %v", err)
@@ -168,7 +168,8 @@ func WeightedAdditiveLoss(losses []LossFunc, weights []float64) LossFunc {
 		}
 		var total *G.Node
 		for i, lossNode := range lossNodes {
-			scaleNode := G.NewConstant(weights[i])
+			// BUG: the name here is not unique
+			scaleNode := G.NewConstant(weights[i], G.WithName(fmt.Sprintf("weightedadditiveloss.weight%d", i)))
 			x, err := G.Mul(lossNode, scaleNode)
 			if err != nil {
 				return nil, nil, err

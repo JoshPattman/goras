@@ -17,12 +17,9 @@ func Input(m *Model, name string, dtype T.Dtype, shape ...int) *InputLayer {
 	if err := validateShape(shape, valAtLeastNDims(1)); err != nil {
 		panic(err)
 	}
-	t := G.NewTensor(m.Graph, dtype, len(shape), G.WithShape(shape...))
+	t := G.NewTensor(m.Graph, dtype, len(shape), G.WithShape(shape...), G.WithName(name+".input"))
 	i := &InputLayer{LayerBase{m.Graph, name, "input", false, t, nil}}
 	m.AddLayer(i)
-	if t != nil {
-		G.WithName(i.Name() + ".input")(t)
-	}
 	i.InputNodes = []*G.Node{}
 	return i
 }

@@ -71,13 +71,13 @@ func (l *ActivationLayer) Attach(n *G.Node) (*G.Node, error) {
 	case "tanh":
 		on, err = G.Tanh(n)
 	case "binary":
-		on, err = G.Gt(n, G.NewConstant(defaultVal(n.Dtype()), G.WithType(n.Dtype())), true)
+		on, err = G.Gt(n, G.NewConstant(defaultVal(n.Dtype()), G.WithType(n.Dtype()), G.WithName(fmt.Sprintf("%s.binarythresh", l.Name()))), true)
 	case "softmax":
 		on, err = customSoftMax(n) //G.SoftMax(n, 1) // TODO: my custom softmax seems to be working but gorgonias dosn't. Invistigate more and maybe create an issue.
 	case "leakyrelu":
-		return nil, fmt.Errorf("leakyrelu is currently broken, please just use relu for now.")
+		//return nil, fmt.Errorf("leakyrelu is currently broken, please just use relu for now.")
 		//on, err = G.LeakyRelu(n, l.LeakyReluGrad)
-		on, err = customLeakyRelu(n, l.LeakyReluGrad) // TODO: my custom leakyrelu seems to be working but gorgonias dosn't. Invistigate more and maybe create an issue.
+		on, err = customLeakyRelu(n, l.LeakyReluGrad, l.Name()) // TODO: my custom leakyrelu seems to be working but gorgonias dosn't. Invistigate more and maybe create an issue.
 	default:
 		return nil, fmt.Errorf("invalid activation '%s'", l.Activation)
 	}
@@ -131,7 +131,7 @@ func customSoftMax(x *G.Node) (*G.Node, error) {
 // IMPORTANT:CURRENTLY BROKEN
 // Again, I think the goriginia Leakyrelu is broken. This is a drop in replacement.
 // TODO: investigate more.
-func customLeakyRelu(x *G.Node, alpha float64) (*G.Node, error) {
+func customLeakyRelu(x *G.Node, alpha float64, name string) (*G.Node, error) {
 	var err error
 	var alphaVal interface{}
 	switch x.Dtype() {
@@ -147,21 +147,18 @@ func customLeakyRelu(x *G.Node, alpha float64) (*G.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	alphaNode := G.NewConstant(alphaVal, G.WithType(x.Dtype()))
+	alphaNode := G.NewConstant(alphaVal, G.WithType(x.Dtype()), G.WithName(fmt.Sprintf("%s.alpha", name)))
 	multAlphaNode, err := G.HadamardProd(x, alphaNode)
 	if err != nil {
 		return nil, err
 	}
-	var _ = multAlphaNode
-	return rect, nil
-	/*multAlphaNode, err = G.Rectify(multAlphaNode)
+	multAlphaNode, err = G.Rectify(multAlphaNode)
 	if err != nil {
 		return nil, err
 	}
-	return rect, nil
 	total, err := G.Sub(rect, multAlphaNode)
 	if err != nil {
 		return nil, err
 	}
-	return total, nil*/
+	return total, nil
 }

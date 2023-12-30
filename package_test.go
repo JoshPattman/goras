@@ -3,6 +3,7 @@ package goras
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"testing"
 
 	G "gorgonia.org/gorgonia"
@@ -335,19 +336,19 @@ func TestActivations(t *testing.T) {
 	if err := testActivation(Binary, x, binaryY); err != nil {
 		t.Fatal(err)
 	}
-	/*
-		lr001 := func(m *Model, name string) *ActivationLayer {
-			return LeakyRelu(m, name, 0.01)
-		}
-		lr001Y, _ := Make2DSliceTensor(
-			[][]float32{
-				{-0.001, 0.3, 0.5},
-				{-0.02, 1, 2},
-			},
-		)
-		if err := testActivation(lr001, x, lr001Y); err != nil {
-			t.Fatal(err)
-		}*/
+
+	lr001 := func(m *Model, name string) *ActivationLayer {
+		return LeakyRelu(m, name, 0.01)
+	}
+	lr001Y, _ := Make2DSliceTensor(
+		[][]float32{
+			{-0.001, 0.3, 0.5},
+			{-0.02, 1, 2},
+		},
+	)
+	if err := testActivation(lr001, x, lr001Y); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestOneHot(t *testing.T) {
@@ -423,4 +424,55 @@ func TestModelSaveLoad(t *testing.T) {
 	if !yp.Eq(yp2) {
 		t.Fatalf("Output tensors were not equal: \n%v and \n%v", yp, yp2)
 	}
+}
+
+func testSimpleLoss(t *testing.T, name string, lf func(string, *G.Node) LossFunc, x, yt T.Tensor, lt float32) {
+	g := G.NewGraph()
+	inp := G.NewMatrix(g, T.Float32, G.WithShape(2, 3), G.WithName("fvdhubuv"))
+	loss, reqs, err := MSELoss("yt", inp)()
+	if err != nil {
+		t.Fatal(err)
+	}
+	tar := reqs["yt"]
+	var lossVal G.Value
+	G.Read(loss, &lossVal)
+	machine := G.NewTapeMachine(g)
+	machine.Reset()
+	if err := G.Let(inp, x); err != nil {
+		t.Fatal(err)
+	}
+	if err := G.Let(tar, yt); err != nil {
+		t.Fatal(err)
+	}
+	if err := machine.RunAll(); err != nil {
+		t.Fatal(err)
+	}
+	if lossVal.Data().(float32) != lt {
+		t.Fatalf("wrong loss value for %v: %v, expected %v", name, lossVal, lt)
+	}
+}
+func TestLosses(t *testing.T) {
+	x, err := Make2DSliceTensor(
+		[][]float32{
+			{0.2, 0.3, 0.5},
+			{0.9, 0.05, 0.05},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	yt, err := Make2DSliceTensor(
+		[][]float32{
+			{0, 0, 1},
+			{1, 0, 0},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	targetMSEError := (math.Pow(0.2, 2) + math.Pow(0.3, 2) + math.Pow(0.5, 2) + math.Pow(0.1, 2) + math.Pow(0.05, 2) + math.Pow(0.05, 2)) / 6.0
+	testSimpleLoss(t, "mse", MSELoss, x, yt, float32(targetMSEError))
+
+	/*targetCCEError := -(math.Log10(0.5) + math.Log10(0.9)) / 2
+	testSimpleLoss(t, "cce", CCELoss, x, yt, float32(targetCCEError))*/
 }

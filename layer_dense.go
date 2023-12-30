@@ -29,8 +29,8 @@ func (l *DenseLayer) Attach(n *G.Node) (*G.Node, error) {
 	}
 	numInputs := n.Shape()[1]
 	batchSize := n.Shape()[0]
-	l.Weights = G.NewMatrix(l.Graph, n.Dtype(), G.WithShape(numInputs+1, l.Nodes), G.WithInit(G.GlorotN(1.0)))
-	bias := G.NewConstant(T.Ones(n.Dtype(), batchSize, 1))
+	l.Weights = G.NewMatrix(l.Graph, n.Dtype(), G.WithShape(numInputs+1, l.Nodes), G.WithInit(G.GlorotN(1.0)), G.WithName(l.Name()+".weights"))
+	bias := G.NewConstant(T.Ones(n.Dtype(), batchSize, 1), G.WithName(l.Name()+".bias"))
 	// Build the graph
 	withBias, err := G.Concat(1, n, bias)
 	if err != nil {
