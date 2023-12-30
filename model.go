@@ -96,6 +96,15 @@ func (m *Model) Build(opts ...BuildOpts) error {
 		}
 	}
 
+	// Check for duplicate node names
+	nodeNames := make(map[string]bool)
+	for _, n := range m.Graph.AllNodes() {
+		if _, ok := nodeNames[n.Name()]; ok {
+			return fmt.Errorf("duplicate node name %s, either there are two layers with the same name, or this is a bug (please report)", n.Name())
+		}
+		nodeNames[n.Name()] = true
+	}
+
 	// Create machine
 	m.Machine = G.NewTapeMachine(m.Graph)
 	return nil
