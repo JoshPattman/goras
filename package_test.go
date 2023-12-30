@@ -1,6 +1,7 @@
 package goras
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -387,4 +388,39 @@ func TestOneHot(t *testing.T) {
 		t.Fatal("wrong output: ", yp["yp"])
 	}
 
+}
+
+func TestModelSaveLoad(t *testing.T) {
+	model, err := makeXORModel()
+	if err != nil {
+		t.Fatal(err)
+	}
+	xt, err := Make2DSliceTensor([][]float64{
+		{0, 0},
+		{0, 1},
+		{1, 0},
+		{1, 1},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	yps, err := model.Predict(NamedTs{"x": xt})
+	yp := yps["yp"]
+
+	buf := bytes.NewBuffer(make([]byte, 0))
+	if err := model.WriteParams(buf); err != nil {
+		t.Fatal(err)
+	}
+
+	model2, _ := makeXORModel()
+	if err := model2.ReadParams(buf); err != nil {
+		t.Fatal(err)
+	}
+
+	yps2, err := model2.Predict(NamedTs{"x": xt})
+	yp2 := yps2["yp"]
+
+	if !yp.Eq(yp2) {
+		t.Fatalf("Output tensors were not equal: \n%v and \n%v", yp, yp2)
+	}
 }
