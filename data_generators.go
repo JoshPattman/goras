@@ -11,7 +11,7 @@ type TrainingDataGenerator interface {
 var _ TrainingDataGenerator = &TensorTrainingDataGenerator{}
 
 // TensorTrainingDataGenerator is a TrainingDataGenerator that uses tensors as inputs and outputs.
-// It shoudl only be used with small datasets, as it requires the entire dataset to be loaded into memory at once.
+// It should only be used with small datasets, as it requires the entire dataset to be loaded into memory at once.
 type TensorTrainingDataGenerator struct {
 	inputs                map[string]T.Tensor
 	outputs               map[string]T.Tensor

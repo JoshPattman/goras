@@ -12,7 +12,7 @@ import (
 
 // Model is a collection of layers which are all on the same graph,
 // a machine which can be used to run the graph,
-// and refrences to input, output and loss nodes.
+// and references to input, output and loss nodes.
 type Model struct {
 	Graph             *G.ExprGraph
 	Layers            []Layer
@@ -508,7 +508,7 @@ func batchMultipleTensors(inputs map[string]T.Tensor, batchSize int, zeroPad boo
 	return batchedInputs, numNeededBatch, nil
 }
 
-// This performs a slice on the first dimension but garantees that the output will have same ndims as input
+// This performs a slice on the first dimension but guarantees that the output will have same ndims as input
 func sliceBatch(t T.Tensor, slice T.Slice) (T.Tensor, error) {
 	origShape := t.Shape()
 	st, err := t.Slice(slice)

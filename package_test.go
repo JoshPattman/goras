@@ -55,7 +55,7 @@ func loadXORXY() (*T.Dense, *T.Dense) {
 	return x, y
 }
 
-// TEST: Creates, trains, and tests a model that learns the XOR function. If the model incorectly predicts, this test will fail (very unlikely).
+// TEST: Creates, trains, and tests a model that learns the XOR function. If the model incorrectly predicts, this test will fail (very unlikely).
 func TestXor(t *testing.T) {
 	model, err := makeXORModel()
 	if err != nil {
