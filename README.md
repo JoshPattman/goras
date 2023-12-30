@@ -16,19 +16,20 @@ Though currently labeled as unstable, this package is still usable, with almost 
 - Easy to build complex models with custom components
 - Supports multiple model inputs and outputs
 - Provides simple model weights saving and loading
+- Supports fitting models with data generators
 - Supports multiple types of layers, with more on the way
-  - _Dense_
-  - _Conv2D_
-  - _MaxPooling2D_
-  - _Dropout_
-  - _Reshape_
-  - _OneHot_
+  - `Dense`
+  - `Conv2D`
+  - `MaxPooling2D`
+  - `Dropout`
+  - `Reshape`
+  - `OneHot`
 - Supports many loss functions with a very flexible method of adding more
-  - _Mean Squared Error_
-  - _Binary Cross-Entropy_
-  - _Categorical Cross-Entropy_
-  - _L2 Normalisation_
-  - _Weighted Additive Loss_ - For combining multiple losses for multiple outputs
+  - `Mean Squared Error`
+  - `Binary Cross-Entropy`
+  - `Categorical Cross-Entropy`
+  - `L2 Normalisation`
+  - `Weighted Additive Loss` - For combining multiple losses for multiple outputs
 ## Examples
 The `examples/` directory contains multiple examples, with detailed comments throughout explaining each step. It is recommended that you read through the examples in order, as most concepts are only talked about once.
 ## Todo
