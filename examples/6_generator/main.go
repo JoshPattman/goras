@@ -36,9 +36,7 @@ func main() {
 
 	// Create a solver and fit the model.
 	solver := gorgonia.NewAdamSolver(gorgonia.WithLearnRate(0.01))
-	if err := model.FitGenerator(trainingGenerator, solver, goras.WithEpochs(10)); err != nil {
-		panic(err)
-	}
+	model.MustFitGenerator(trainingGenerator, solver, goras.WithEpochs(10))
 
 	// Create some test X and Y data
 	testX := tensor.NewDense(tensor.Float64, tensor.Shape{360, 1})
@@ -50,12 +48,9 @@ func main() {
 	}
 
 	// Predict the test data. Hopefully, this should be close to the real data.
-	testYPs, err := model.Predict(goras.NamedTs{
+	testYPs := model.MustPredict(goras.NamedTs{
 		"x": testX,
 	})
-	if err != nil {
-		panic(err)
-	}
 	testYP := testYPs["yp"]
 
 	// Create a plot to visualise the results
