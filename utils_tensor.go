@@ -32,6 +32,15 @@ func Make2DSliceTensor[T any](data [][]T) (tensor.Tensor, error) {
 	return t, nil
 }
 
+// MustMake2DSliceTensor calls Make2DSliceTensor and panics if there is an error.
+func MustMake2DSliceTensor[T any](data [][]T) tensor.Tensor {
+	t, err := Make2DSliceTensor(data)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
+
 // Make1DSliceTensor converts a 1D slice to a tensor.
 func Make1DSliceTensor[T any](data []T) (tensor.Tensor, error) {
 	if len(data) == 0 {
@@ -51,6 +60,15 @@ func Make1DSliceTensor[T any](data []T) (tensor.Tensor, error) {
 	return t, nil
 }
 
+// MustMake1DSliceTensor calls Make1DSliceTensor and panics if there is an error.
+func MustMake1DSliceTensor[T any](data []T) tensor.Tensor {
+	t, err := Make1DSliceTensor(data)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
+
 func GetTensorDataType(t interface{}) (tensor.Dtype, error) {
 	switch t.(type) {
 	case int:
@@ -64,4 +82,13 @@ func GetTensorDataType(t interface{}) (tensor.Dtype, error) {
 	default:
 		return tensor.Dtype{}, fmt.Errorf("unsupported type %T", t)
 	}
+}
+
+// MustGetTensorDataType calls GetTensorDataType and panics if there is an error.
+func MustGetTensorDataType(t interface{}) tensor.Dtype {
+	typ, err := GetTensorDataType(t)
+	if err != nil {
+		panic(err)
+	}
+	return typ
 }
