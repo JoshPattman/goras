@@ -3,7 +3,7 @@ module 4_dogs_cats
 go 1.21.0
 
 require (
-	github.com/JoshPattman/goras v0.3.0
+	github.com/JoshPattman/goras v0.3.3
 	gorgonia.org/gorgonia v0.9.18
 	gorgonia.org/tensor v0.9.24
 )

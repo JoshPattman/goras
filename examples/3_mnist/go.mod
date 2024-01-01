@@ -3,7 +3,7 @@ module 3_mnist
 go 1.21.0
 
 require (
-	github.com/JoshPattman/goras v0.3.0
+	github.com/JoshPattman/goras v0.3.3
 	github.com/pkg/errors v0.9.1
 	gorgonia.org/gorgonia v0.9.18
 	gorgonia.org/tensor v0.9.24
