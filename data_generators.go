@@ -2,10 +2,12 @@ package goras
 
 import T "gorgonia.org/tensor"
 
+// TrainingDataGenerator is used by a model to generate data on-the-fly during training.
 type TrainingDataGenerator interface {
-	NextBatch(batchSize int) (map[string]T.Tensor, map[string]T.Tensor, error) // Should return nil, nil, nil if no more data
-	Reset(batchSize int) error                                                 // Resets the generator for the next epoch
-	NumBatches() int                                                           // Returns the number of batches in this epoch
+	// NextBatch returns the next batch of data and labels. If there is no more data, it should return nil, nil, nil.
+	NextBatch() (map[string]T.Tensor, map[string]T.Tensor, error)
+	Reset(batchSize int) error // Resets the generator for the next epoch
+	NumBatches() int           // Returns the number of batches in this epoch
 }
 
 var _ TrainingDataGenerator = &TensorTrainingDataGenerator{}
@@ -31,7 +33,7 @@ func NewTTDG(xs, ys map[string]T.Tensor) *TensorTrainingDataGenerator {
 	}
 }
 
-func (t *TensorTrainingDataGenerator) NextBatch(int) (map[string]T.Tensor, map[string]T.Tensor, error) {
+func (t *TensorTrainingDataGenerator) NextBatch() (map[string]T.Tensor, map[string]T.Tensor, error) {
 	if t.currentBatch >= len(t.currentBatchedInputs) {
 		return nil, nil, nil
 	}

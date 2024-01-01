@@ -11,4 +11,5 @@ use ./examples/3_mnist
 use (
 	./examples/4_dog_cats
 	./examples/5_iris_dataset
+	./examples/6_generator
 )

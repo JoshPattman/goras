@@ -355,7 +355,7 @@ func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ..
 		currentBatches := 0.0
 		bi := 0
 		for {
-			xBatch, yBatch, err := tdg.NextBatch(batchSize)
+			xBatch, yBatch, err := tdg.NextBatch()
 			if err != nil {
 				return err
 			}
