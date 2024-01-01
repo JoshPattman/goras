@@ -32,8 +32,10 @@ Though currently labeled as unstable, this package is still usable, with almost 
   - `L2 Normalisation`
   - `Weighted Additive Loss` - For combining multiple losses for multiple outputs
 ## Examples
-The `examples/` directory contains multiple examples, with detailed comments throughout explaining each step. It is recommended that you read through the examples in order, as most concepts are only talked about once. Alternatively, below are some short code snippets using **Goras**:
+The `examples/` directory contains multiple examples, with detailed comments throughout explaining each step. It is recommended that you read through the examples in order, as most concepts are only talked about once. Alternatively, below are some short code snippets using **Goras**. Note that in these examples, many methods are named `MustXXX(...)`, which means that **Goras** will run the function `XXX()` which returns an some data and an error, but will only return the data. It will panic if an error occurs.
 ### Build a model
+Building a model is simple in Goras, however the api can easily allow you to build complex models, far beyond what sequential model building can produce.
+
 ```go
 batchSize := 4
 inputNodes, hiddenNodes, outputNodes := 2, 5, 1
@@ -53,14 +55,18 @@ model.MustBuild(K.WithInput("x", inputs), K.WithOutput("yp", outputs), K.WithLos
 return model
 ```
 
-### Fit/Predict with a model
+### Fit a model to data
+Fitting a model in **Goras** requires just one line of code. The `Fit` method is extensible, using constructor options. **Goras** also supports data generators, which allow data to be loaded one batch at a time, instead of all before `Fit is called`
 ```go
-err := model.Fit(K.NamedTs{"x": x}, K.NamedTs{"yt": y}, solver, K.WithEpochs(1000), K.WithLoggingEvery(100))
-
-outs, err := model.Predict(K.NamedTs{"x": x})
-yp := outs["yp"]
+model.MustFit(K.NamedTs{"x": x}, K.NamedTs{"yt": y}, solver, K.WithEpochs(1000), K.WithLoggingEvery(100))
 ```
 
+### Predicting with a model
+Predicting using a model is just as simple as fitting.
+```go
+outs := model.MustPredict(K.NamedTs{"x": x})
+yp := outs["yp"]
+```
 
 ## Todo
 - Add these layers (most of these will need to implement the op in gorgonia first)

@@ -10,9 +10,8 @@ import (
 	T "gorgonia.org/tensor"
 )
 
-// Model is a collection of layers which are all on the same graph,
-// a machine which can be used to run the graph,
-// and references to input, output and loss nodes.
+// Model is the core primitive of goras.
+// It is effectively a wrapper around a Gorgonia graph, with extra functionality.
 type Model struct {
 	Graph             *G.ExprGraph
 	Layers            []Layer
@@ -39,16 +38,25 @@ type buildParams struct {
 	outputNodes map[string]*G.Node
 	loss        LossFunc
 }
+
+// BuildOpts are options for the Build method.
 type BuildOpts func(*buildParams)
 
+// WithInput adds an input node to the model.
+//   - inputName: The name we will use to pass tensors to this node. This must be unique, and will be used later in fit and predict methods.
+//   - inputNode: The node to use as the input. This is usually from a goras.Input layer.
 func WithInput(inputName string, inputNode *G.Node) BuildOpts {
 	return func(b *buildParams) { b.inputNodes[inputName] = inputNode }
 }
 
+// WithOutput adds an output node to the model.
+//   - outputName: The name we will use to get tensors from this node. This must be unique, and will be used later in fit and predict methods.
+//   - outputNode: The node to use as the output.
 func WithOutput(name string, outputNode *G.Node) BuildOpts {
 	return func(b *buildParams) { b.outputNodes[name] = outputNode }
 }
 
+// WithLoss specifies the loss function for the model.
 func WithLoss(loss LossFunc) BuildOpts {
 	return func(b *buildParams) { b.loss = loss }
 }
@@ -119,6 +127,7 @@ func (m *Model) Build(opts ...BuildOpts) error {
 	return nil
 }
 
+// MustBuild calls Build, but panics if there is an error.
 func (m *Model) MustBuild(opts ...BuildOpts) {
 	err := m.Build(opts...)
 	if err != nil {
@@ -173,12 +182,28 @@ func (m *Model) SetParams(params map[string]*T.Dense) error {
 	return nil
 }
 
+// MustSetParams calls SetParams, but panics if there is an error.
+func (m *Model) MustSetParams(params map[string]*T.Dense) {
+	err := m.SetParams(params)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // WriteParams writes the parameters in gob format to an io.Writer.
 // The params are retrieved with Model.GetParams.
 func (m *Model) WriteParams(w io.Writer) error {
 	params := m.GetParams()
 	enc := gob.NewEncoder(w)
 	return enc.Encode(params)
+}
+
+// MustWriteParams calls WriteParams, but panics if there is an error.
+func (m *Model) MustWriteParams(w io.Writer) {
+	err := m.WriteParams(w)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // ReadParams reads the parameters in gob format from an io.Reader.
@@ -190,6 +215,14 @@ func (m *Model) ReadParams(r io.Reader) error {
 		return err
 	}
 	return m.SetParams(params)
+}
+
+// MustReadParams calls ReadParams, but panics if there is an error.
+func (m *Model) MustReadParams(r io.Reader) {
+	err := m.ReadParams(r)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // BindParamsFrom binds the parameters in the model m1 to the parameters in this model m, meaning layers with the same name will share the same tensors.
@@ -211,6 +244,14 @@ func (m *Model) BindParamsFrom(m1 *Model) error {
 	return nil
 }
 
+// MustBindParamsFrom calls BindParamsFrom, but panics if there is an error.
+func (m *Model) MustBindParamsFrom(m1 *Model) {
+	err := m.BindParamsFrom(m1)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // CopyParamsFrom copys the parameters in the model m1 to the parameters in this model m, meaning layers with the same name will share the same values in their tensors.
 // The tensors will be copies of each other, so changing one will not change the other.
 // If you want to share the tensors, use BindParamsFrom instead.
@@ -227,6 +268,14 @@ func (m *Model) CopyParamsFrom(m1 *Model) error {
 		}
 	}
 	return nil
+}
+
+// MustCopyParamsFrom calls CopyParamsFrom, but panics if there is an error.
+func (m *Model) MustCopyParamsFrom(m1 *Model) {
+	err := m.CopyParamsFrom(m1)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // PredictBatch runs the model on a batch of input data. The batch size must match the input node shape.
@@ -259,6 +308,15 @@ func (m *Model) PredictBatch(inputs map[string]T.Tensor) (map[string]T.Tensor, e
 		).Clone().(*T.Dense)
 	}
 	return outputTensors, nil
+}
+
+// MustPredictBatch calls PredictBatch, but panics if there is an error.
+func (m *Model) MustPredictBatch(inputs map[string]T.Tensor) map[string]T.Tensor {
+	ys, err := m.PredictBatch(inputs)
+	if err != nil {
+		panic(err)
+	}
+	return ys
 }
 
 // FitBatch runs the model on a batch of input data, and then trains the model on the target data.
@@ -300,6 +358,16 @@ func (m *Model) FitBatch(inputs, lossRequirements map[string]T.Tensor, solver G.
 	return loss, nil
 }
 
+// MustFitBatch calls FitBatch, but panics if there is an error.
+func (m *Model) MustFitBatch(inputs, lossRequirements map[string]T.Tensor, solver G.Solver) float64 {
+	loss, err := m.FitBatch(inputs, lossRequirements, solver)
+	if err != nil {
+		panic(err)
+	}
+	return loss
+}
+
+// FitOpts are options for the Fit method.
 type FitOpt func(*fitParams)
 
 type fitParams struct {
@@ -327,10 +395,20 @@ func WithEpochCallback(cb EpochCallback) FitOpt {
 	return func(p *fitParams) { p.EpochEndCallbakcs = append(p.EpochEndCallbakcs, cb) }
 }
 
+// Fit fits the model to the given data.
 func (m *Model) Fit(xs, ys map[string]T.Tensor, solver G.Solver, opts ...FitOpt) error {
 	return m.FitGenerator(NewTTDG(xs, ys), solver, opts...)
 }
 
+// MustFit calls Fit, but panics if there is an error.
+func (m *Model) MustFit(xs, ys map[string]T.Tensor, solver G.Solver, opts ...FitOpt) {
+	err := m.Fit(xs, ys, solver, opts...)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// FitGenerator fits the model to the given data generator.
 func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ...FitOpt) error {
 	params := &fitParams{
 		Epochs:            1,
@@ -355,7 +433,7 @@ func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ..
 		currentBatches := 0.0
 		bi := 0
 		for {
-			xBatch, yBatch, err := tdg.NextBatch(batchSize)
+			xBatch, yBatch, err := tdg.NextBatch()
 			if err != nil {
 				return err
 			}
@@ -392,6 +470,14 @@ func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ..
 		fmt.Println()
 	}
 	return nil
+}
+
+// MustFitGenerator calls FitGenerator, but panics if there is an error.
+func (m *Model) MustFitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ...FitOpt) {
+	err := m.FitGenerator(tdg, solver, opts...)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Predict returns the models outputs for the given inputs. It cuts the inputs into batches so the inputs can be of any length.
@@ -432,6 +518,15 @@ func (m *Model) Predict(xs map[string]T.Tensor) (map[string]T.Tensor, error) {
 
 	}
 	return ys, nil
+}
+
+// MustPredict calls Predict, but panics if there is an error.
+func (m *Model) MustPredict(xs map[string]T.Tensor) map[string]T.Tensor {
+	ys, err := m.Predict(xs)
+	if err != nil {
+		panic(err)
+	}
+	return ys
 }
 
 func (m *Model) getCurrentBatchSize() int {
@@ -526,6 +621,7 @@ func sliceBatch(t T.Tensor, slice T.Slice) (T.Tensor, error) {
 	return st, nil
 }
 
+// Summary returns a string summarising the model.
 func (m *Model) Summary() string {
 	s := ""
 	s += "================== Inputs ===================\n"
