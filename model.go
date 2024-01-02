@@ -449,16 +449,9 @@ func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ..
 			if params.Verbose && isLoggingEpoch && bi%logEveryBatch == 0 {
 				bar := strings.Repeat("=", int(currentBatches/float64(numBatches)*39))
 				bar += ">"
-				fmt.Printf("\rEpoch %d/%d - Loss: %f |%-40v|", epoch, params.Epochs, loss/currentBatches, bar)
+				fmt.Printf("\rEpoch %d/%d - loss: %.8f |%-40v|", epoch, params.Epochs, loss/currentBatches, bar)
 			}
 			bi++
-		}
-		if params.Verbose && isLoggingEpoch {
-			lineEnd := "\n"
-			if params.ClearLine {
-				lineEnd = "\r"
-			}
-			fmt.Printf("\rEpoch %d/%d - Loss: %f |Done| %40v%v", epoch, params.Epochs, loss/currentBatches, "", lineEnd)
 		}
 		metrics := make(map[string]float64)
 		metrics["loss"] = loss / currentBatches
@@ -467,11 +460,26 @@ func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ..
 				return err
 			}
 		}
+		if params.Verbose && isLoggingEpoch {
+			lineEnd := "\n"
+			if params.ClearLine {
+				lineEnd = "\r"
+			}
+			fmt.Printf("\rEpoch %d/%d - %v |Done| %40v%v", epoch, params.Epochs, formatMetrics(metrics), "", lineEnd)
+		}
 	}
 	if params.Verbose {
 		fmt.Println()
 	}
 	return nil
+}
+
+func formatMetrics(metrics map[string]float64) string {
+	ret := ""
+	for k, v := range metrics {
+		ret += fmt.Sprintf("%s: %.8f ", k, v)
+	}
+	return ret
 }
 
 // MustFitGenerator calls FitGenerator, but panics if there is an error.
