@@ -49,14 +49,13 @@ func main() {
 	fmt.Println(model.Summary())
 
 	// Set up a callback to test the accuracy of the model
-	accuracyCallback := func(epoch int, metrics map[string]float64) error {
+	accuracyCallback := func() (float64, error) {
 		acc := calculateAccuracy(model, X, Y)
-		metrics["accuracy"] = acc
-		return nil
+		return acc, nil
 	}
 
 	// Create a file to log the metrics to
-	logFile, err := os.Create("loss.csv")
+	logFile, err := os.Create("metrics.csv")
 	if err != nil {
 		panic(err)
 	}
@@ -64,7 +63,16 @@ func main() {
 
 	// Fit the model with an Adam solver and 500 epochs. Also log the metrics to a csv file.
 	solver := gorgonia.NewAdamSolver(gorgonia.WithLearnRate(0.02))
-	model.MustFit(goras.NamedTs{"x": X}, goras.NamedTs{"yt": Y}, solver, goras.WithEpochs(500), goras.WithLoggingEvery(50), goras.WithEpochCallbacks(accuracyCallback, goras.LogCSVMetricsCallback(logFile, "loss", "accuracy")))
+	model.MustFit(
+		goras.NamedTs{"x": X}, goras.NamedTs{"yt": Y},
+		solver,
+		goras.WithEpochs(500),
+		goras.WithLoggingEvery(50),
+		goras.WithEpochCallbacks(
+			goras.CustomMetricCallback(accuracyCallback, "accuracy", 1),
+			goras.LogCSVMetricsCallback(logFile, "loss", "accuracy"),
+		),
+	)
 
 	// Print the predictions of the model (this is measured on the training set, it would be better practice to do this on an unseen test set)
 	py, _ := model.Predict(goras.NamedTs{"x": X})
