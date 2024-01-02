@@ -375,7 +375,7 @@ type fitParams struct {
 	LogEvery          int
 	Verbose           bool
 	ClearLine         bool
-	EpochEndCallbakcs []EpochCallback
+	EpochEndCallbacks []EpochCallback
 }
 
 // WithEpochs sets the number of epochs to train for.
@@ -390,9 +390,9 @@ func WithVerbose(verbose bool) FitOpt { return func(p *fitParams) { p.Verbose = 
 // WithClearLine sets whether to clear the line when logging the loss.
 func WithClearLine(clear bool) FitOpt { return func(p *fitParams) { p.ClearLine = clear } }
 
-// WithEpochCallback adds a callback to be called at the end of each epoch.
-func WithEpochCallback(cb EpochCallback) FitOpt {
-	return func(p *fitParams) { p.EpochEndCallbakcs = append(p.EpochEndCallbakcs, cb) }
+// WithEpochCallbacks adds some callbacks to be called at the end of each epoch (in order).
+func WithEpochCallbacks(cb ...EpochCallback) FitOpt {
+	return func(p *fitParams) { p.EpochEndCallbacks = append(p.EpochEndCallbacks, cb...) }
 }
 
 // Fit fits the model to the given data.
@@ -415,7 +415,7 @@ func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ..
 		LogEvery:          1,
 		Verbose:           true,
 		ClearLine:         false,
-		EpochEndCallbakcs: []EpochCallback{},
+		EpochEndCallbacks: []EpochCallback{},
 	}
 	for _, o := range opts {
 		o(params)
@@ -460,8 +460,10 @@ func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ..
 			}
 			fmt.Printf("\rEpoch %d/%d - Loss: %f |Done| %40v%v", epoch, params.Epochs, loss/currentBatches, "", lineEnd)
 		}
-		for _, cb := range params.EpochEndCallbakcs {
-			if err := cb(epoch, loss/currentBatches); err != nil {
+		metrics := make(map[string]float64)
+		metrics["loss"] = loss / currentBatches
+		for _, cb := range params.EpochEndCallbacks {
+			if err := cb(epoch, metrics); err != nil {
 				return err
 			}
 		}

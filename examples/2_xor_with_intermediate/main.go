@@ -56,7 +56,7 @@ func main() {
 	// FitBatch also does not have some of the useful features of Fit, such as the loading bar.
 	solver := G.NewAdamSolver(G.WithLearnRate(0.01))
 	for epoch := 0; epoch <= 1000; epoch++ {
-		loss, _ := modelFull.FitBatch(K.NamedTs{"x": x}, K.NamedTs{"yt": y}, solver)
+		loss := modelFull.MustFitBatch(K.NamedTs{"x": x}, K.NamedTs{"yt": y}, solver)
 		if epoch%100 == 0 {
 			fmt.Printf("Epoch: %-4v Loss %.4f\n", fmt.Sprint(epoch), loss)
 		}

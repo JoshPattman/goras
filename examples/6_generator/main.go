@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
 
 	"github.com/JoshPattman/goras"
 	"gonum.org/v1/plot"
@@ -35,8 +36,14 @@ func main() {
 	model.MustBuild(goras.WithInput("x", inp), goras.WithOutput("yp", out), goras.WithLoss(goras.MSELoss("yt", out)))
 
 	// Create a solver and fit the model.
+	// Also log the loss metric to a csv file for later analysis.
+	logFile, err := os.Create("loss.csv")
+	if err != nil {
+		panic(err)
+	}
+	defer logFile.Close()
 	solver := gorgonia.NewAdamSolver(gorgonia.WithLearnRate(0.01))
-	model.MustFitGenerator(trainingGenerator, solver, goras.WithEpochs(10))
+	model.MustFitGenerator(trainingGenerator, solver, goras.WithEpochs(10), goras.WithEpochCallbacks(goras.LogCSVMetricsCallback(logFile, "loss")))
 
 	// Create some test X and Y data
 	testX := tensor.NewDense(tensor.Float64, tensor.Shape{360, 1})
