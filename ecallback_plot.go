@@ -8,9 +8,9 @@ import (
 // LogCSVMetricsCallback logs the metrics to a writer in CSV format.
 // It will log as training progresses, and will never close the writer.
 func LogCSVMetricsCallback(writer io.Writer, metricNames ...string) EpochCallback {
-	headerString := "epoch,"
+	headerString := "epoch"
 	for _, name := range metricNames {
-		headerString += name
+		headerString += "," + name
 	}
 	_, err := fmt.Fprintf(writer, "%v\n", headerString)
 	if err != nil {
@@ -21,12 +21,12 @@ func LogCSVMetricsCallback(writer io.Writer, metricNames ...string) EpochCallbac
 		row := make([]string, len(metricNames))
 		for i, name := range metricNames {
 			if mVal, ok := metrics[name]; ok {
-				row[i] = fmt.Sprintf("%v", mVal)
+				row[i] = fmt.Sprintf(",%v", mVal)
 				anyMetricsRun = true
 			}
 		}
 		if anyMetricsRun {
-			rowString := fmt.Sprintf("%v,", epoch)
+			rowString := fmt.Sprintf("%v", epoch)
 			for _, val := range row {
 				rowString += val
 			}
