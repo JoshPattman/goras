@@ -3,6 +3,7 @@ package goras
 import (
 	"reflect"
 
+	"gorgonia.org/tensor"
 	T "gorgonia.org/tensor"
 )
 
@@ -19,3 +20,12 @@ func copyMap[T comparable, U any](dst, src map[T]U) {
 // NamedTs is a map of string to T.Tensor.
 // It is just a convenience type to make code nicer to read.
 type NamedTs map[string]T.Tensor
+
+// Return a list of all axes of a tensor
+func allAxes(shape tensor.Shape) []int {
+	axes := make([]int, shape.Dims())
+	for i := range axes {
+		axes[i] = i
+	}
+	return axes
+}
