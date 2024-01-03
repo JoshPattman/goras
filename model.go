@@ -375,7 +375,7 @@ type fitParams struct {
 	LogEvery          int
 	Verbose           bool
 	ClearLine         bool
-	EpochEndCallbakcs []EpochCallback
+	TrainingCallbacks []TrainingCallback
 }
 
 // WithEpochs sets the number of epochs to train for.
@@ -390,9 +390,9 @@ func WithVerbose(verbose bool) FitOpt { return func(p *fitParams) { p.Verbose = 
 // WithClearLine sets whether to clear the line when logging the loss.
 func WithClearLine(clear bool) FitOpt { return func(p *fitParams) { p.ClearLine = clear } }
 
-// WithEpochCallback adds a callback to be called at the end of each epoch.
-func WithEpochCallback(cb EpochCallback) FitOpt {
-	return func(p *fitParams) { p.EpochEndCallbakcs = append(p.EpochEndCallbakcs, cb) }
+// WithTrainingCallbacks adds some callbacks to be used during training.
+func WithTrainingCallbacks(cb ...TrainingCallback) FitOpt {
+	return func(p *fitParams) { p.TrainingCallbacks = append(p.TrainingCallbacks, cb...) }
 }
 
 // Fit fits the model to the given data.
@@ -415,12 +415,27 @@ func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ..
 		LogEvery:          1,
 		Verbose:           true,
 		ClearLine:         false,
-		EpochEndCallbakcs: []EpochCallback{},
+		TrainingCallbacks: []TrainingCallback{},
 	}
 	for _, o := range opts {
 		o(params)
 	}
 	batchSize := m.getCurrentBatchSize()
+	// Make sure to cleanup the callbacks
+	defer func() {
+		for _, cb := range params.TrainingCallbacks {
+			if cb.OnCleanup != nil {
+				cb.OnCleanup()
+			}
+		}
+	}()
+	for _, cb := range params.TrainingCallbacks {
+		if cb.OnTrainingStart != nil {
+			if err := cb.OnTrainingStart(); err != nil {
+				return err
+			}
+		}
+	}
 	for epoch := 1; epoch <= params.Epochs; epoch++ {
 		tdg.Reset(batchSize)
 		numBatches := tdg.NumBatches()
@@ -449,27 +464,46 @@ func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ..
 			if params.Verbose && isLoggingEpoch && bi%logEveryBatch == 0 {
 				bar := strings.Repeat("=", int(currentBatches/float64(numBatches)*39))
 				bar += ">"
-				fmt.Printf("\rEpoch %d/%d - Loss: %f |%-40v|", epoch, params.Epochs, loss/currentBatches, bar)
+				fmt.Printf("\rEpoch %d/%d - loss: %.8f |%-40v|", epoch, params.Epochs, loss/currentBatches, bar)
 			}
 			bi++
+		}
+		metrics := make(map[string]float64)
+		metrics["loss"] = loss / currentBatches
+		for _, cb := range params.TrainingCallbacks {
+			if cb.OnEpochEnd != nil {
+				if err := cb.OnEpochEnd(epoch, metrics); err != nil {
+					return err
+				}
+			}
 		}
 		if params.Verbose && isLoggingEpoch {
 			lineEnd := "\n"
 			if params.ClearLine {
 				lineEnd = "\r"
 			}
-			fmt.Printf("\rEpoch %d/%d - Loss: %f |Done| %40v%v", epoch, params.Epochs, loss/currentBatches, "", lineEnd)
-		}
-		for _, cb := range params.EpochEndCallbakcs {
-			if err := cb(epoch, loss/currentBatches); err != nil {
-				return err
-			}
+			fmt.Printf("\rEpoch %d/%d - %v |Done| %40v%v", epoch, params.Epochs, formatMetrics(metrics), "", lineEnd)
 		}
 	}
 	if params.Verbose {
 		fmt.Println()
 	}
+	for _, cb := range params.TrainingCallbacks {
+		if cb.OnTrainingEnd != nil {
+			if err := cb.OnTrainingEnd(); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
+}
+
+func formatMetrics(metrics map[string]float64) string {
+	ret := ""
+	for k, v := range metrics {
+		ret += fmt.Sprintf("%s: %.8f ", k, v)
+	}
+	return ret
 }
 
 // MustFitGenerator calls FitGenerator, but panics if there is an error.

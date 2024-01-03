@@ -48,12 +48,24 @@ func main() {
 	// Print a summary of the model
 	fmt.Println(model.Summary())
 
-	// Fit the model with an Adam solver and 500 epochs.
-	solver := gorgonia.NewAdamSolver(gorgonia.WithLearnRate(0.02))
-	err := model.Fit(goras.NamedTs{"x": X}, goras.NamedTs{"yt": Y}, solver, goras.WithEpochs(500), goras.WithLoggingEvery(50))
-	if err != nil {
-		panic(err)
+	// Set up a callback to test the accuracy of the model
+	accuracyCallback := func() (float64, error) {
+		acc := calculateAccuracy(model, X, Y)
+		return acc, nil
 	}
+
+	// Fit the model with an Adam solver and 500 epochs. Also log the metrics to a csv file.
+	solver := gorgonia.NewAdamSolver(gorgonia.WithLearnRate(0.02))
+	model.MustFit(
+		goras.NamedTs{"x": X}, goras.NamedTs{"yt": Y},
+		solver,
+		goras.WithEpochs(500),
+		goras.WithLoggingEvery(50),
+		goras.WithTrainingCallbacks(
+			goras.CustomMetricCallback(accuracyCallback, "accuracy", 1),
+			goras.LogCSVMetricsCallback("metrics.csv", "loss", "accuracy"),
+		),
+	)
 
 	// Print the predictions of the model (this is measured on the training set, it would be better practice to do this on an unseen test set)
 	py, _ := model.Predict(goras.NamedTs{"x": X})
@@ -74,4 +86,22 @@ func main() {
 		}
 	}
 	fmt.Printf("Accuracy: %.2f%%\n", float64(correct)/30*100) // My model here is getting 96.67%
+}
+
+func calculateAccuracy(model *goras.Model, X, Y *tensor.Dense) float64 {
+	YPs, _ := model.Predict(goras.NamedTs{"x": X})
+	correct := 0
+	for i := 0; i < 30; i++ {
+		yi, _ := Y.Slice(tensor.S(i))
+		pyi, _ := YPs["y"].Slice(tensor.S(i))
+		classNames := []string{"\033[0;101mIris-virginica\033[0m", "\033[0;102mIris-setosa\033[0m", "\033[0;103mIris-versicolor\033[0m"}
+		classI, _ := tensor.Argmax(pyi, 0)
+		aclassI, _ := tensor.Argmax(yi, 0)
+		class := classNames[classI.Data().(int)]
+		aclass := classNames[aclassI.Data().(int)]
+		if class == aclass {
+			correct++
+		}
+	}
+	return float64(correct) / 30 * 100
 }

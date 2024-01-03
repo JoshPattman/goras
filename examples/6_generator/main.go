@@ -34,9 +34,8 @@ func main() {
 	out = goras.Tanh(model, namer()).MustAttach(out)
 	model.MustBuild(goras.WithInput("x", inp), goras.WithOutput("yp", out), goras.WithLoss(goras.MSELoss("yt", out)))
 
-	// Create a solver and fit the model.
 	solver := gorgonia.NewAdamSolver(gorgonia.WithLearnRate(0.01))
-	model.MustFitGenerator(trainingGenerator, solver, goras.WithEpochs(10))
+	model.MustFitGenerator(trainingGenerator, solver, goras.WithEpochs(10), goras.WithTrainingCallbacks(goras.LogCSVMetricsCallback("loss.csv", "loss")))
 
 	// Create some test X and Y data
 	testX := tensor.NewDense(tensor.Float64, tensor.Shape{360, 1})
