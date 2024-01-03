@@ -421,6 +421,14 @@ func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ..
 		o(params)
 	}
 	batchSize := m.getCurrentBatchSize()
+	// Make sure to cleanup the callbacks
+	defer func() {
+		for _, cb := range params.TrainingCallbacks {
+			if cb.OnCleanup != nil {
+				cb.OnCleanup()
+			}
+		}
+	}()
 	for _, cb := range params.TrainingCallbacks {
 		if cb.OnTrainingStart != nil {
 			if err := cb.OnTrainingStart(); err != nil {

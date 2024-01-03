@@ -54,13 +54,6 @@ func main() {
 		return acc, nil
 	}
 
-	// Create a file to log the metrics to
-	logFile, err := os.Create("metrics.csv")
-	if err != nil {
-		panic(err)
-	}
-	defer logFile.Close()
-
 	// Fit the model with an Adam solver and 500 epochs. Also log the metrics to a csv file.
 	solver := gorgonia.NewAdamSolver(gorgonia.WithLearnRate(0.02))
 	model.MustFit(
@@ -70,7 +63,7 @@ func main() {
 		goras.WithLoggingEvery(50),
 		goras.WithTrainingCallbacks(
 			goras.CustomMetricCallback(accuracyCallback, "accuracy", 1),
-			goras.LogCSVMetricsCallback(logFile, "loss", "accuracy"),
+			goras.LogCSVMetricsCallback("metrics.csv", "loss", "accuracy"),
 		),
 	)
 
