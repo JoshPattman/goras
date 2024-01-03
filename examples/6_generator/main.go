@@ -43,7 +43,7 @@ func main() {
 	}
 	defer logFile.Close()
 	solver := gorgonia.NewAdamSolver(gorgonia.WithLearnRate(0.01))
-	model.MustFitGenerator(trainingGenerator, solver, goras.WithEpochs(10), goras.WithEpochCallbacks(goras.LogCSVMetricsCallback(logFile, "loss")))
+	model.MustFitGenerator(trainingGenerator, solver, goras.WithEpochs(10), goras.WithTrainingCallbacks(goras.LogCSVMetricsCallback(logFile, "loss")))
 
 	// Create some test X and Y data
 	testX := tensor.NewDense(tensor.Float64, tensor.Shape{360, 1})

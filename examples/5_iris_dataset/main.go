@@ -68,7 +68,7 @@ func main() {
 		solver,
 		goras.WithEpochs(500),
 		goras.WithLoggingEvery(50),
-		goras.WithEpochCallbacks(
+		goras.WithTrainingCallbacks(
 			goras.CustomMetricCallback(accuracyCallback, "accuracy", 1),
 			goras.LogCSVMetricsCallback(logFile, "loss", "accuracy"),
 		),

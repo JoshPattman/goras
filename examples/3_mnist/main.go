@@ -53,7 +53,7 @@ func main() {
 	// For exemplar purposes, we also save the model parameters after each epoch using a callback.
 	// You can also write your own callbacks very simply by making a function `func (epoch int) error`.
 	fitStart := time.Now()
-	err = model.Fit(K.NamedTs{"input": x}, K.NamedTs{"output_target": y}, solver, K.WithClearLine(false), K.WithEpochs(3), K.WithEpochCallbacks(K.SaveModelParametersCallback(model, "./model.gob")))
+	err = model.Fit(K.NamedTs{"input": x}, K.NamedTs{"output_target": y}, solver, K.WithClearLine(false), K.WithEpochs(3), K.WithTrainingCallbacks(K.SaveModelParametersCallback(model, "./model.gob")))
 	if err != nil {
 		panic(err)
 	}
