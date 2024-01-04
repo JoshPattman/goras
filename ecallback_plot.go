@@ -27,7 +27,7 @@ func LogCSVMetricsCallback(filename string, metricNames ...string) TrainingCallb
 			}
 			return nil
 		},
-		OnEpochEnd: func(epoch int, metrics map[string]float64) error {
+		OnEpochEnd: func(epoch int, metrics map[string]float64) (bool, error) {
 			anyMetricsRun := false
 			row := make([]string, len(metricNames))
 			for i, name := range metricNames {
@@ -42,9 +42,9 @@ func LogCSVMetricsCallback(filename string, metricNames ...string) TrainingCallb
 					rowString += val
 				}
 				_, err := fmt.Fprintf(file, "%v\n", rowString)
-				return err
+				return false, err
 			}
-			return nil
+			return false, nil
 		},
 		OnCleanup: func() {
 			file.Close()

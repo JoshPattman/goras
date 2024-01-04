@@ -470,10 +470,13 @@ func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ..
 		}
 		metrics := make(map[string]float64)
 		metrics["loss"] = loss / currentBatches
+		earlyStopRequested := false
 		for _, cb := range params.TrainingCallbacks {
 			if cb.OnEpochEnd != nil {
-				if err := cb.OnEpochEnd(epoch, metrics); err != nil {
+				if earlyStop, err := cb.OnEpochEnd(epoch, metrics); err != nil {
 					return err
+				} else if earlyStop {
+					earlyStopRequested = true
 				}
 			}
 		}
@@ -483,6 +486,9 @@ func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ..
 				lineEnd = "\r"
 			}
 			fmt.Printf("\rEpoch %d/%d - %v |Done| %40v%v", epoch, params.Epochs, formatMetrics(metrics), "", lineEnd)
+		}
+		if earlyStopRequested {
+			break
 		}
 	}
 	if params.Verbose {
