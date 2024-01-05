@@ -123,7 +123,7 @@ func (m *Model) Build(opts ...BuildOpts) error {
 	}
 
 	// Create machine
-	m.Machine = G.NewTapeMachine(m.Graph)
+	m.Machine = G.NewTapeMachine(m.Graph, G.BindDualValues(m.Trainables()...))
 	return nil
 }
 
