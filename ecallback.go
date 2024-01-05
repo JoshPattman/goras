@@ -9,6 +9,12 @@ type TrainingCallback struct {
 	// If it returns an error, training will stop.
 	// If it returns true, training will stop gracefully with no error.
 	OnEpochEnd func(epoch int, metrics map[string]float64) (bool, error)
+	// OnBatchEnd is called after each batch.
+	// If it returns an error, training will stop.
+	// batch is the number of the batch that just finished.
+	// maxBatch is the total number of batches in the epoch.
+	// Even though you can do model evaluation (like calculating accuracy) here, it is not recommended, as it will slow training significantly.
+	OnBatchEnd func(epoch, batch, maxBatch int, metrics map[string]float64) error
 	// OnTrainingEnd is called after training ends.
 	// If it returns an error, other OnTrainingEnd callbacks may not be called, as the fit function will exit.
 	OnTrainingEnd func() error

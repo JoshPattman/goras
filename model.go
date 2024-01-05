@@ -466,6 +466,16 @@ func (m *Model) FitGenerator(tdg TrainingDataGenerator, solver G.Solver, opts ..
 				bar += ">"
 				fmt.Printf("\rEpoch %d/%d - loss: %.8f |%-40v|", epoch, params.Epochs, loss/currentBatches, bar)
 			}
+			metrics := make(map[string]float64)
+			metrics["loss"] = loss / currentBatches
+			metrics["batch_loss"] = batchLoss
+			for _, cb := range params.TrainingCallbacks {
+				if cb.OnBatchEnd != nil {
+					if err := cb.OnBatchEnd(epoch, bi, numBatches, metrics); err != nil {
+						return err
+					}
+				}
+			}
 			bi++
 		}
 		metrics := make(map[string]float64)

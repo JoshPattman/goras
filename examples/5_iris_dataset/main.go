@@ -62,8 +62,8 @@ func main() {
 		goras.WithEpochs(500),
 		goras.WithLoggingEvery(50),
 		goras.WithTrainingCallbacks(
-			goras.CustomMetricCallback(accuracyCallback, "accuracy", 1),
-			goras.LogCSVMetricsCallback("metrics.csv", "loss", "accuracy"),
+			goras.CustomEpochMetricCallback(accuracyCallback, "accuracy", 1),
+			goras.LogCSVEpochMetricsCallback("metrics.csv", "loss", "accuracy"),
 		),
 	)
 
