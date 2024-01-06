@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	G "gorgonia.org/gorgonia"
+	"gorgonia.org/tensor"
 	T "gorgonia.org/tensor"
 )
 
@@ -475,4 +476,99 @@ func TestLosses(t *testing.T) {
 
 	/*targetCCEError := -(math.Log10(0.5) + math.Log10(0.9)) / 2
 	testSimpleLoss(t, "cce", CCELoss, x, yt, float32(targetCCEError))*/
+}
+
+func TestArith(t *testing.T) {
+	namer := NewNamer("model")
+	model := NewModel()
+	inpsA := Input(model, namer(), tensor.Float64, 2, 3).Node()
+	inpsB := Input(model, namer(), tensor.Float64, 2, 3).Node()
+	outsAdded, err := Add(model, namer()).Attach(inpsA, inpsB)
+	if err != nil {
+		t.Fatal(err)
+	}
+	outsSubbed, err := Sub(model, namer()).Attach(inpsA, inpsB)
+	if err != nil {
+		t.Fatal(err)
+	}
+	outsMuled, err := HardmanProd(model, namer()).Attach(inpsA, inpsB)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = model.Build(
+		WithInput("xa", inpsA),
+		WithInput("xb", inpsB),
+		WithOutput("ypAdd", outsAdded),
+		WithOutput("ypSub", outsSubbed),
+		WithOutput("ypMul", outsMuled),
+		WithLoss(MSELoss("yt", outsAdded)),
+	)
+
+	aVal, err := Make2DSliceTensor(
+		[][]float64{
+			{0, 0, 1},
+			{1, 0, 0},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bVal, err := Make2DSliceTensor(
+		[][]float64{
+			{1, 1, 0},
+			{1, 1, 0},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	preds, err := model.PredictBatch(
+		NamedTs{
+			"xa": aVal,
+			"xb": bVal,
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	predAdd := preds["ypAdd"]
+	predSub := preds["ypSub"]
+	predMul := preds["ypMul"]
+	targetAdd, err := Make2DSliceTensor(
+		[][]float64{
+			{1, 1, 1},
+			{2, 1, 0},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	targetSub, err := Make2DSliceTensor(
+		[][]float64{
+			{-1, -1, 1},
+			{0, -1, 0},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	targetMul, err := Make2DSliceTensor(
+		[][]float64{
+			{0, 0, 0},
+			{1, 0, 0},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !targetAdd.Eq(predAdd) {
+		t.Fatalf("Incorrect output for add op: expected \n%v\n but got \n%v\n", targetAdd, predAdd)
+	}
+	if !targetSub.Eq(predSub) {
+		t.Fatalf("Incorrect output for sub op: expected \n%v\n but got \n%v\n", targetSub, predSub)
+	}
+	if !targetMul.Eq(predMul) {
+		t.Fatalf("Incorrect output for mul op: expected \n%v\n but got \n%v\n", targetMul, predMul)
+	}
 }
