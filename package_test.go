@@ -479,6 +479,7 @@ func TestLosses(t *testing.T) {
 }
 
 func TestArith(t *testing.T) {
+	// This test might seem a bit confusing, but basically we are using a models multiple output capabilities to do all the ops at once.
 	namer := NewNamer("model")
 	model := NewModel()
 	inpsA := Input(model, namer(), tensor.Float64, 2, 3).Node()
@@ -495,12 +496,17 @@ func TestArith(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	outsDotted, err := Dot(model, namer()).Attach(inpsA, inpsB)
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = model.Build(
 		WithInput("xa", inpsA),
 		WithInput("xb", inpsB),
 		WithOutput("ypAdd", outsAdded),
 		WithOutput("ypSub", outsSubbed),
 		WithOutput("ypMul", outsMuled),
+		WithOutput("ypDot", outsDotted),
 		WithLoss(MSELoss("yt", outsAdded)),
 	)
 
@@ -535,6 +541,7 @@ func TestArith(t *testing.T) {
 	predAdd := preds["ypAdd"]
 	predSub := preds["ypSub"]
 	predMul := preds["ypMul"]
+	predDot := preds["ypDot"]
 	targetAdd, err := Make2DSliceTensor(
 		[][]float64{
 			{1, 1, 1},
@@ -562,6 +569,15 @@ func TestArith(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	targetDot, err := Make2DSliceTensor(
+		[][]float64{
+			{0},
+			{1},
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if !targetAdd.Eq(predAdd) {
 		t.Fatalf("Incorrect output for add op: expected \n%v\n but got \n%v\n", targetAdd, predAdd)
 	}
@@ -570,5 +586,8 @@ func TestArith(t *testing.T) {
 	}
 	if !targetMul.Eq(predMul) {
 		t.Fatalf("Incorrect output for mul op: expected \n%v\n but got \n%v\n", targetMul, predMul)
+	}
+	if !targetDot.Eq(predDot) {
+		t.Fatalf("Incorrect output for dot op: expected \n%v\n but got \n%v\n", targetDot, predDot)
 	}
 }

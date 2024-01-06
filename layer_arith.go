@@ -39,6 +39,11 @@ func HardmanDiv(m *Model, name string) *BinElemmArithmeticLayer {
 	return BinElemArithmetic(m, name, "hardman_div")
 }
 
+func Dot(m *Model, name string) *BinElemmArithmeticLayer {
+	return BinElemArithmetic(m, name, "dot")
+}
+
+// TODO: add shape checking for dot
 func (l *BinElemmArithmeticLayer) Attach(a, b *G.Node) (*G.Node, error) {
 	var out *G.Node
 	var err error
@@ -51,6 +56,13 @@ func (l *BinElemmArithmeticLayer) Attach(a, b *G.Node) (*G.Node, error) {
 		out, err = G.HadamardProd(a, b)
 	case "hardman_div":
 		out, err = G.HadamardDiv(a, b)
+	case "dot":
+		mulled, err2 := G.HadamardProd(a, b)
+		if err2 != nil {
+			err = err2
+			break
+		}
+		out, err = G.Sum(mulled, 1)
 	default:
 		return nil, fmt.Errorf("invalid arith op '%s'", l.ArithOp)
 	}
